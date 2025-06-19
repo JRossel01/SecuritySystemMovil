@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:background="#222831">
+
+    <Button
+        android:id="@+id/btnSomnolencia"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Iniciar detección de somnolencia"
+        android:textColor="#EEEEEE"
+        android:backgroundTint="#00ADB5"
+        android:textStyle="bold"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/btnUbicacion"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Mostrar ubicación actual"
+        android:textColor="#EEEEEE"
+        android:backgroundTint="#417685"
+        android:textStyle="bold"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/btnSomnolencia"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/btnVelocidad"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Medir velocidad"
+        android:textColor="#EEEEEE"
+        android:backgroundTint="#F08A5D"
+        android:textStyle="bold"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/btnUbicacion"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/btnEditarUnidad"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Editar unidad"
+        android:textColor="#EEEEEE"
+        android:backgroundTint="#8BC34A"
+        android:textStyle="bold"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/btnVelocidad"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/btnMostrarUnidad"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Ver unidad registrada"
+        android:textColor="#EEEEEE"
+        android:backgroundTint="#607D8B"
+        android:textStyle="bold"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/btnEditarUnidad"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/btnLoginFacial"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Login facial"
+        android:textColor="#EEEEEE"
+        android:backgroundTint="#9C27B0"
+        android:textStyle="bold"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/btnMostrarUnidad"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="#FFF8E1"
+    android:gravity="center_vertical"> <!-- Centrado vertical -->
+
+    <TextView
+        android:id="@+id/textVehiculo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Seleccione un vehículo"
+        android:textSize="28sp"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="24dp" />
+
+    <Spinner
+        android:id="@+id/spinnerVehiculos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="36dp"
+        android:popupBackground="#FFFFFF" />
+
+    <Button
+        android:id="@+id/btnGuardarVehiculo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Guardar vehículo"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#000000"
+        android:textSize="22sp"
+        android:paddingTop="18dp"
+        android:paddingBottom="18dp" />
+</LinearLayout>
