@@ -1,6 +1,8 @@
 package com.grupo12.securitysystemmovil.negocio;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
@@ -9,17 +11,20 @@ import android.graphics.YuvImage;
 import android.util.Log;
 
 import androidx.camera.core.ImageProxy;
+import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.location.Priority;
 import com.google.gson.JsonObject;
+import com.grupo12.securitysystemmovil.MainActivity;
 import com.grupo12.securitysystemmovil.dato.DloginFacial;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import android.location.Location;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -29,8 +34,16 @@ import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
 import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
+import com.grupo12.securitysystemmovil.presentacion.PeditVehiculo;
+import com.grupo12.securitysystemmovil.presentacion.Perror.PsinViaje;
+import com.grupo12.securitysystemmovil.presentacion.Perror.PvehiculoIncorrecto;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
 
 public class NloginFacial {
+
+    private static final float UMBRAL_COMPARACION_CENTROS = 100;
 
     public interface OnUsuarioPreparadoListener {
         void onPreparado(JsonObject userInfo, Bitmap referenciaBitmap);
@@ -57,6 +70,8 @@ public class NloginFacial {
                         Log.d("NloginFacial", "Imagen de referencia descargada correctamente");
                         listener.onPreparado(userData, bitmap);
                     }
+
+
 
                     @Override
                     public void onError(String error) {
@@ -102,7 +117,7 @@ public class NloginFacial {
                             + Math.abs(faceRef.getBoundingBox().centerY() - faceAct.getBoundingBox().centerY());
 
                     Log.d("NloginFacial", "Diferencia entre centros de rostros: " + diferencia);
-                    resultado = diferencia < 50; // Umbral ajustable
+                    resultado = diferencia < UMBRAL_COMPARACION_CENTROS;
                 } else {
                     Log.w("NloginFacial", "No se detectaron suficientes rostros para comparar");
                 }
@@ -165,13 +180,37 @@ public class NloginFacial {
                 });
     }
 
-    public void guardarConductorLocal(Context context, JsonObject userInfo, Bitmap imagen) {
+    public void guardarLocal(Context context, JsonObject userInfo, Bitmap imagen) {
+        int rol = userInfo.get("rol").getAsInt();
+        int userId = userInfo.get("id").getAsInt();
         String ci = userInfo.get("ci").getAsString();
         String nombre = userInfo.get("nombre").getAsString();
         String apellido = userInfo.get("apellido").getAsString();
-        int rol = userInfo.get("rol").getAsInt();
 
-        // Guardar imagen en almacenamiento interno
+        DloginFacial dlogin = new DloginFacial();
+        dlogin.limpiarBD(context);
+
+        if (rol == 1) {
+            Ngestor ngestor = new Ngestor(context);
+            boolean resultadoGestor = ngestor.guardarGestor(userId, ci, nombre, apellido, rol);
+
+            if (resultadoGestor) {
+                Log.d("NloginFacial", "Gestor guardado correctamente");
+
+                guardarEvento(context, userId,
+                        "Inicio de sesión exitoso del gestor", "Seguridad", "Informacion", dlogin,
+                        () -> redirigirPorRol(context, rol));
+
+            } else {
+                Log.e("NloginFacial", "Error al guardar gestor en BD");
+            }
+
+            return;
+        }
+
+        Nvehiculo nvehiculo = new Nvehiculo(context);
+        Ntrip ntrip = new Ntrip(context);
+
         String nombreArchivo = "conductor_" + ci + ".jpg";
         File archivoImagen = new File(context.getFilesDir(), nombreArchivo);
 
@@ -179,19 +218,61 @@ public class NloginFacial {
             imagen.compress(Bitmap.CompressFormat.JPEG, 90, out);
             out.flush();
 
-            // Guardar datos en SQLite
             Nconductores nconductores = new Nconductores(context);
             boolean resultado = nconductores.registrarConductor(
-                    ci,
-                    nombre,
-                    apellido,
-                    rol,
-                    archivoImagen.getAbsolutePath(),
-                    1
+                    userId, ci, nombre, apellido, rol, archivoImagen.getAbsolutePath(), 1
             );
 
             if (resultado) {
                 Log.d("NloginFacial", "Conductor guardado correctamente");
+
+                ntrip.guardarTrip(userId, userId, new Ntrip.TripCallback() {
+                    @Override
+                    public void onSuccess() {
+                        int vehicleIdLocal = nvehiculo.obtenerVehiculoLocal().id;
+                        int vehicleIdViaje = ntrip.obtenerVehicleId();
+
+                        guardarEvento(context, userId,
+                                "Inicio de sesión exitoso del conductor", "Seguridad", "Informacion", dlogin,
+                                () -> {
+                                    Log.d("NloginFacial", "vehicleIdLocal: " + vehicleIdLocal);
+                                    Log.d("NloginFacial", "vehicleIdViaje: " + vehicleIdViaje);
+
+                                    if (vehicleIdLocal != vehicleIdViaje) {
+                                        Log.e("NloginFacial", "El vehículo del dispositivo no coincide con el del viaje.");
+
+                                        guardarEvento(context, userId,
+                                                "Inicio de sesión por conductor no autorizado",
+                                                "Seguridad", "Advertencia", dlogin,
+                                                () -> {
+
+                                                    dlogin.limpiarBD(context);
+
+                                                    Intent intent = new Intent(context, PvehiculoIncorrecto.class);
+                                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                    context.startActivity(intent);
+                                                });
+                                        return;
+                                    }
+
+                                    Log.d("NloginFacial", "Conductor y viaje válidos. Procediendo con redirección.");
+                                    redirigirPorRol(context, rol);
+                                }
+                        );
+                    }
+
+
+                    @Override
+                    public void onFailure(String error) {
+                        Log.e("NloginFacial", "Error al guardar el viaje activo: " + error);
+
+                        if (error.contains("No hay viaje activo")) {
+                            Intent intent = new Intent(context, PsinViaje.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            context.startActivity(intent);
+                        }
+                    }
+                });
             } else {
                 Log.e("NloginFacial", "Error al guardar conductor en BD");
             }
@@ -199,5 +280,40 @@ public class NloginFacial {
         } catch (IOException e) {
             Log.e("NloginFacial", "Error al guardar imagen del conductor", e);
         }
+
     }
+
+    private void redirigirPorRol(Context context, int rol) {
+        Class<?> destino = (rol == 1) ? PeditVehiculo.class : MainActivity.class;
+        Intent intent = new Intent(context, destino);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        context.startActivity(intent);
+    }
+
+    private void guardarEvento(Context context, int userId, String mensaje, String tipo, String nivel, DloginFacial dlogin, Runnable onComplete) {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.e("NloginFacial", "Permiso de ubicación denegado");
+            dlogin.guardarEvento(context, userId, mensaje, tipo, nivel, 0, 0);
+            onComplete.run();
+            return;
+        }
+
+        FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener(location -> {
+                    double lat = (location != null) ? location.getLatitude() : 0;
+                    double lon = (location != null) ? location.getLongitude() : 0;
+
+                    dlogin.guardarEvento(context, userId, mensaje, tipo, nivel, lat, lon);
+                    onComplete.run();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("NloginFacial", "Error al obtener ubicación", e);
+                    dlogin.guardarEvento(context, userId, mensaje, tipo, nivel, 0, 0);
+                    onComplete.run();
+                });
+    }
+
+
 }

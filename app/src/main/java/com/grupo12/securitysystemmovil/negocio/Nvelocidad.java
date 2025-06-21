@@ -16,7 +16,7 @@ public class Nvelocidad {
     private TextView tvAlertaVelocidad;
     private double latitud = 0;
     private double longitud = 0;
-
+    private float umbralVelocidad = -1f;
     private float velocidadAnterior = -1f;
     private long tiempoAnterior = 0;
     private static final float UMBRAL_FRENO_BRUSCO = 15f; // en km/h
@@ -31,7 +31,7 @@ public class Nvelocidad {
         dvelocidad.setContext(context);
     }
 
-    public void procesarVelocidad(Location location, float umbral) {
+    public void procesarVelocidad(Location location) {
         if (location == null) return;
 
         float velocidadMps = location.getSpeed();
@@ -40,7 +40,7 @@ public class Nvelocidad {
         long tiempoActual = System.currentTimeMillis();
 
         setUbicacion(location.getLatitude(), location.getLongitude());
-        detectarVelocidadMaxima(velocidadKmh, umbral);
+        detectarVelocidadMaxima(velocidadKmh, umbralVelocidad);
         detectarFrenoBrusco(velocidadKmh, tiempoActual);
     }
 
@@ -91,23 +91,30 @@ public class Nvelocidad {
                 if (velocidadActual < 1.0f) {
                     // Posible colisión
                     String mensaje = String.format(Locale.getDefault(),
-                            "Posible colisión detectada (%.1f km/h a %.1f km/h en %.1f s)",
-                            velocidadAnterior, velocidadActual, deltaTiempo / 1000f);
+                            "Freno brusco detectado (%d km/h en %.1f s)",
+                            Math.round(diferenciaVelocidad), deltaTiempo / 1000f);
+
                     Log.e("Velocidad", mensaje);
-                    dvelocidad.crearEvento(mensaje, "Colisión", "Crítico", latitud, longitud);
+                    dvelocidad.crearEvento(mensaje, "Colisión", "Critico", latitud, longitud);
                 } else {
                     // ⚠Freno brusco común
                     String mensaje = String.format(Locale.getDefault(),
-                            "Freno brusco detectado (%.1f km/h en %.1f s)",
-                            diferenciaVelocidad, deltaTiempo / 1000f);
+                            "Freno brusco detectado (%d km/h en %.1f s)",
+                            Math.round(diferenciaVelocidad), deltaTiempo / 1000f);
+
                     Log.w("Velocidad", mensaje);
-                    dvelocidad.crearEvento(mensaje, "Velocidad", "Crítico", latitud, longitud);
+                    dvelocidad.crearEvento(mensaje, "Velocidad", "Critico", latitud, longitud);
                 }
             }
         }
 
         velocidadAnterior = velocidadActual;
         tiempoAnterior = tiempoActual;
+    }
+
+    public void umbralVelocidad(Context context) {
+        Nvehiculo nvehiculo = new Nvehiculo(context);
+        this.umbralVelocidad = nvehiculo.obtenerVehiculoLocal().velocidadMaxima;
     }
 
     public void setTextViewAlerta(TextView tvAlertaVelocidad) {

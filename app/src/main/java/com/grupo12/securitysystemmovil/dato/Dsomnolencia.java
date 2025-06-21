@@ -69,8 +69,19 @@ public class Dsomnolencia {
             }
             values.put("user_id", userId);
 
-            // Asignar trip_id fijo
-            values.put("trip_id", 1);
+            // Obtener trip_id
+            int tripId = -1;
+            try {
+                Cursor cursor = db.rawQuery("SELECT id FROM viaje LIMIT 1", null);
+                if (cursor.moveToFirst()) {
+                    tripId = cursor.getInt(0);
+                }
+                cursor.close();
+            } catch (Exception e) {
+                Log.e("Dsomnolencia", "Error al obtener trip_id", e);
+            }
+            values.put("trip_id", tripId);
+
 
             // enviado se crea con 0
             values.put("enviado", 0);

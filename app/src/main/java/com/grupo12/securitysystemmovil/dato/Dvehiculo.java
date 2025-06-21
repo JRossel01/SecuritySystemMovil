@@ -91,14 +91,21 @@ public class Dvehiculo {
                 vehiculo.nombre = cursor.getString(1);
                 vehiculo.placa = cursor.getString(2);
                 vehiculo.velocidadMaxima = cursor.getInt(3);
+            } else {
+                Log.e("Dvehiculo", "No se encontró ningún vehículo en la BD");
+                vehiculo = new VehiculoData();
+                vehiculo.id = -1;
             }
         } catch (Exception e) {
             Log.e("Dvehiculo", "Error al leer vehículo desde SQLite", e);
+            vehiculo = new VehiculoData();
+            vehiculo.id = -1;
         } finally {
             db.close();
         }
 
         return vehiculo;
     }
+
 
 }

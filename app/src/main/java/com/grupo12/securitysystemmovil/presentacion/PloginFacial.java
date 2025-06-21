@@ -60,7 +60,11 @@ public class PloginFacial extends AppCompatActivity {
         previewView = findViewById(R.id.previewView);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
-        permisosLauncher.launch(new String[]{Manifest.permission.CAMERA});
+        permisosLauncher.launch(new String[]{
+                Manifest.permission.CAMERA,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+        });
 
         btnVerificar.setOnClickListener(v -> manejarVerificacion());
     }
@@ -125,23 +129,11 @@ public class PloginFacial extends AppCompatActivity {
                                         cameraProvider.unbindAll();
                                         cameraExecutor.shutdownNow(); // detener el executor
 
-                                        int rolId = usuarioActual.get("rol").getAsInt();
-
-                                        Class<?> destino;
-                                        if (rolId == 1) {
-                                            destino = PeditVehiculo.class;  // gestor
-                                        } else {
-                                            destino = MainActivity.class; // conductor
-                                            nloginFacial.guardarConductorLocal(
-                                                    PloginFacial.this,
-                                                    usuarioActual,
-                                                    referenciaBitmap
-                                            );
-                                        }
-
-                                        Intent intent = new Intent(PloginFacial.this, destino);
-                                        startActivity(intent);
-                                        finish();
+                                        nloginFacial.guardarLocal(
+                                                PloginFacial.this,
+                                                usuarioActual,
+                                                referenciaBitmap
+                                        );
                                     } else {
                                         Toast.makeText(PloginFacial.this, "Rostro no coincide", Toast.LENGTH_SHORT).show();
                                         rostroDetectado = false;

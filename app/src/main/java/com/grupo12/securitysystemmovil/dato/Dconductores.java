@@ -14,10 +14,11 @@ public class Dconductores {
         dbHelper = new movilBD(context);
     }
 
-    public boolean guardarConductor(String ci, String nombre, String apellido, int rol, String rutaImagen, int activo) {
+    public boolean guardarConductor(int id, String ci, String nombre, String apellido, int rol, String rutaImagen, int activo) {
         try {
             SQLiteDatabase db = dbHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
+            values.put("id", id);
             values.put("ci", ci);
             values.put("nombre", nombre);
             values.put("apellido", apellido);

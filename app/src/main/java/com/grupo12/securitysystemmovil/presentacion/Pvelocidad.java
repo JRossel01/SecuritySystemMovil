@@ -1,6 +1,7 @@
 package com.grupo12.securitysystemmovil.presentacion;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -14,6 +15,8 @@ import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.Priority;
 import com.grupo12.securitysystemmovil.R;
+import com.grupo12.securitysystemmovil.dato.Evento.DeventoSync;
+import com.grupo12.securitysystemmovil.dato.Seguimiento.SeguimientoService;
 import com.grupo12.securitysystemmovil.negocio.Nvelocidad;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -24,21 +27,24 @@ import com.google.android.gms.location.LocationServices;
 public class Pvelocidad extends AppCompatActivity {
 
     private static final int REQUEST_LOCATION_PERMISSION = 1002;
-    private static final float UMBRAL_KMH = 20f; // se podrá ajustar más adelante
-
     private FusedLocationProviderClient locationClient;
     private TextView tvVelocidad;
     private Nvelocidad nvelocidad;
     private TextView tvAlertaVelocidad;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pvelocidad);
 
+
+
         tvVelocidad = findViewById(R.id.tvVelocidad);
         nvelocidad = new Nvelocidad();
         nvelocidad.setContextoBD(this);
+
+        nvelocidad.umbralVelocidad(this);
 
         tvAlertaVelocidad = findViewById(R.id.tvAlertaVelocidad);
         nvelocidad.setTextViewAlerta(tvAlertaVelocidad); // se lo pasamos a la lógica
@@ -46,6 +52,10 @@ public class Pvelocidad extends AppCompatActivity {
         locationClient = LocationServices.getFusedLocationProviderClient(this);
 
         solicitarPermisos();
+
+        Intent intent = new Intent(this, SeguimientoService.class);
+        stopService(intent);
+
     }
 
     private void solicitarPermisos() {
@@ -71,9 +81,9 @@ public class Pvelocidad extends AppCompatActivity {
                 Location location = locationResult.getLastLocation();
                 if (location != null) {
                     float velocidadKmh = location.getSpeed() * 3.6f;
-                    tvVelocidad.setText(String.format("Velocidad: %.1f km/h", velocidadKmh));
+                    tvVelocidad.setText(String.format("Velocidad: %d km/h", Math.round(velocidadKmh)));
 
-                    nvelocidad.procesarVelocidad(location, UMBRAL_KMH);
+                    nvelocidad.procesarVelocidad(location);
                 }
             }
         }, Looper.getMainLooper());

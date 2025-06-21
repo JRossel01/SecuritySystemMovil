@@ -11,7 +11,7 @@ public class Nconductores {
         this.dconductores = new Dconductores(context);
     }
 
-    public boolean registrarConductor(String ci, String nombre, String apellido, int rol, String rutaImagen, int activo) {
-        return dconductores.guardarConductor(ci, nombre, apellido, rol, rutaImagen, activo);
+    public boolean registrarConductor(int id, String ci, String nombre, String apellido, int rol, String rutaImagen, int activo) {
+        return dconductores.guardarConductor(id, ci, nombre, apellido, rol, rutaImagen, activo);
     }
 }

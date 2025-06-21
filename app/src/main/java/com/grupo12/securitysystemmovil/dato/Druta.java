@@ -23,17 +23,52 @@ public class Druta {
     private movilBD dbHelper;
 
     public Druta(Context context) {
-        // Simulación de datos por ahora (Santa Cruz ejemplo)
-        origen = new LatLng(-17.724385924310706, -63.153331846277695); // origen
-
-        paradas = new ArrayList<>();
-        paradas.add(new LatLng(-17.731504595147413, -63.159003504963756)); // parada 1
-        paradas.add(new LatLng(-17.74858651636072, -63.176444823460955)); // parada 2 (ejemplo)
-
-        destino = new LatLng(-17.77033639616471, -63.18252213017081); // destino
-
         dbHelper = new movilBD(context);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        // Obtener origen y destino desde tabla ruta
+        try {
+            Cursor cursor = db.rawQuery("SELECT origen_lat, origen_lng, destino_lat, destino_lng FROM ruta LIMIT 1", null);
+            if (cursor.moveToFirst()) {
+                double origenLat = Double.parseDouble(cursor.getString(0));
+                double origenLng = Double.parseDouble(cursor.getString(1));
+                double destinoLat = Double.parseDouble(cursor.getString(2));
+                double destinoLng = Double.parseDouble(cursor.getString(3));
+
+                origen = new LatLng(origenLat, origenLng);
+                destino = new LatLng(destinoLat, destinoLng);
+            } else {
+                // Valores por defecto si no existe ruta
+                origen = new LatLng(0, 0);
+                destino = new LatLng(0, 0);
+            }
+            cursor.close();
+        } catch (Exception e) {
+            Log.e("Druta", "Error al leer ruta desde la BD", e);
+            origen = new LatLng(0, 0);
+            destino = new LatLng(0, 0);
+        }
+
+        // Obtener paradas desde tabla paradas
+        paradas = new ArrayList<>();
+        try {
+            Cursor cursor = db.rawQuery("SELECT latitud, longitud FROM paradas ORDER BY posicion ASC", null);
+            if (cursor.moveToFirst()) {
+                do {
+                    double lat = Double.parseDouble(cursor.getString(0));
+                    double lng = Double.parseDouble(cursor.getString(1));
+                    paradas.add(new LatLng(lat, lng));
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        } catch (Exception e) {
+            Log.e("Druta", "Error al leer paradas desde la BD", e);
+            paradas = new ArrayList<>(); // Asegura que no sea null
+        }
+
+        db.close();
     }
+
 
     public LatLng getOrigen() {
         return origen;
@@ -91,8 +126,18 @@ public class Druta {
             }
             values.put("user_id", userId);
 
-            // trip_id por ahora es fijo
-            values.put("trip_id", 1);
+            // Obtener trip_id
+            int tripId = -1;
+            try {
+                Cursor cursor = db.rawQuery("SELECT id FROM viaje LIMIT 1", null);
+                if (cursor.moveToFirst()) {
+                    tripId = cursor.getInt(0);
+                }
+                cursor.close();
+            } catch (Exception e) {
+                Log.e("Druta", "Error al obtener trip_id", e);
+            }
+            values.put("trip_id", tripId);
 
             // enviado se crea con 0
             values.put("enviado", 0);

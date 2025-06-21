@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.grupo12.securitysystemmovil.dato.Evento.DeventoSync;
 import com.grupo12.securitysystemmovil.presentacion.PeditVehiculo;
 import com.grupo12.securitysystemmovil.presentacion.Pruta;
 import com.grupo12.securitysystemmovil.presentacion.PshowVehiculo;
@@ -12,10 +13,14 @@ import com.grupo12.securitysystemmovil.presentacion.PshowVehiculo;
 
 public class MainActivity extends AppCompatActivity {
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
 
         findViewById(R.id.btnSomnolencia).setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, com.grupo12.securitysystemmovil.presentacion.Psomnolencia.class);

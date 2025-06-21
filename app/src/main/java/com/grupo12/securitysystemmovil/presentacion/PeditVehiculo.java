@@ -1,5 +1,6 @@
 package com.grupo12.securitysystemmovil.presentacion;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -79,6 +80,8 @@ public class PeditVehiculo extends AppCompatActivity {
         nvehiculo.guardarVehiculo(this, vehiculoSeleccionado); // Este método lo implementamos ahora
 
         Toast.makeText(this, "Vehículo guardado correctamente", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, PshowVehiculo.class);
+        startActivity(intent);
         finish();
     }
 }

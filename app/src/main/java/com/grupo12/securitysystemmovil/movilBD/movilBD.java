@@ -39,7 +39,7 @@ public class movilBD extends SQLiteOpenHelper{
         db.execSQL(createTable);
 
         createTable = "CREATE TABLE conductores (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "id INTEGER PRIMARY KEY," +
                 "ci TEXT NOT NULL," +
                 "nombre TEXT NOT NULL," +
                 "apellido TEXT NOT NULL," +
@@ -47,11 +47,46 @@ public class movilBD extends SQLiteOpenHelper{
                 "ruta_imagen TEXT NOT NULL," +
                 "activo INTEGER NOT NULL);";
         db.execSQL(createTable);
+
+        createTable = "CREATE TABLE gestor (" +
+                "id INTEGER PRIMARY KEY," +
+                "ci TEXT NOT NULL," +
+                "nombre TEXT NOT NULL," +
+                "apellido TEXT NOT NULL," +
+                "rol INTEGER NOT NULL);";
+        db.execSQL(createTable);
+
+        createTable = "CREATE TABLE viaje (" +
+                "id INTEGER PRIMARY KEY," +
+                "vehicle_id INTEGER NOT NULL);";
+        db.execSQL(createTable);
+
+        createTable = "CREATE TABLE ruta (" +
+                "id INTEGER PRIMARY KEY," +
+                "origen_lat TEXT NOT NULL," +
+                "origen_lng TEXT NOT NULL," +
+                "destino_lat TEXT NOT NULL," +
+                "destino_lng TEXT NOT NULL);";
+        db.execSQL(createTable);
+
+        createTable = "CREATE TABLE paradas (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "nombre TEXT NOT NULL," +
+                "latitud TEXT NOT NULL," +
+                "longitud TEXT NOT NULL," +
+                "posicion INTEGER);";
+        db.execSQL(createTable);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS eventos");
+        db.execSQL("DROP TABLE IF EXISTS vehiculo");
+        db.execSQL("DROP TABLE IF EXISTS conductores");
+        db.execSQL("DROP TABLE IF EXISTS gestor");
+        db.execSQL("DROP TABLE IF EXISTS viaje");
+        db.execSQL("DROP TABLE IF EXISTS ruta");
+        db.execSQL("DROP TABLE IF EXISTS paradas");
         onCreate(db);
     }
 }

@@ -3,23 +3,24 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5DC"> <!-- beige claro -->
+    android:background="#FFF8E1">
 
     <EditText
         android:id="@+id/editCi"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="Ingrese su CI"
-        android:textColor="#000000"
-        android:textColorHint="#888888"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#FFFFFF"
         android:backgroundTint="#000000"
         android:inputType="number"
-        android:padding="12dp"
+        android:padding="14dp"
+        android:elevation="4dp"
+        android:background="@drawable/edittext_rounded"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/previewView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.1"
+        android:layout_marginTop="48dp"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp" />
 
@@ -27,24 +28,32 @@
         android:id="@+id/previewView"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@drawable/preview_rounded"
         app:layout_constraintTop_toBottomOf="@id/editCi"
         app:layout_constraintBottom_toTopOf="@id/btnVerificar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp" />
 
     <Button
         android:id="@+id/btnVerificar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Verificar rostro"
-        android:textColor="#000000"
-        android:backgroundTint="#DDDDDD"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#000000"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:elevation="6dp"
+        android:background="@drawable/button_rounded"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/previewView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="32dp" />
+        android:layout_marginBottom="36dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

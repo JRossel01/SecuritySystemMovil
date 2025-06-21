@@ -9,7 +9,7 @@
 
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="false" />
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -23,23 +23,29 @@
         android:theme="@style/Theme.SecuritySystemMovil"
         tools:targetApi="31">
         <activity
-            android:name=".presentacion.PshowVehiculo"
+            android:name=".presentacion.Perror.PsinViaje"
             android:exported="false" />
+        <activity
+            android:name=".presentacion.Perror.PvehiculoIncorrecto"
+            android:exported="true" />
+        <activity
+            android:name=".presentacion.PshowVehiculo"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".presentacion.PeditVehiculo"
-            android:exported="false" />
+            android:exported="true" />
         <activity
             android:name=".presentacion.PloginFacial"
-            android:exported="false" />
-        <activity
-            android:name=".presentacion.PshowUnidad"
-            android:exported="false" />
-        <activity
-            android:name=".presentacion.PeditUnidad"
-            android:exported="false" />
+            android:exported="true" />
         <activity
             android:name=".presentacion.Pvelocidad"
-            android:exported="false" />
+            android:exported="true" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -47,19 +53,18 @@
 
         <activity
             android:name=".presentacion.Pruta"
-            android:exported="false" />
+            android:exported="true" />
         <activity
             android:name=".presentacion.Psomnolencia"
-            android:exported="false" />
+            android:exported="true" />
         <activity
             android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            android:exported="true" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+        <service
+            android:name=".dato.Seguimiento.SeguimientoService"
+            android:exported="false" />
+
     </application>
 
 </manifest>
