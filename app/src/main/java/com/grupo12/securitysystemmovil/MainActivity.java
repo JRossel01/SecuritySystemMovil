@@ -50,5 +50,10 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, com.grupo12.securitysystemmovil.presentacion.PloginFacial.class);
             startActivity(intent);
         });
+
+        findViewById(R.id.btnPreViaje).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, com.grupo12.securitysystemmovil.presentacion.PpreViaje.class);
+            startActivity(intent);
+        });
     }
 }

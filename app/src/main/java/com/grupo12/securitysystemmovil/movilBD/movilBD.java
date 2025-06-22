@@ -58,11 +58,14 @@ public class movilBD extends SQLiteOpenHelper{
 
         createTable = "CREATE TABLE viaje (" +
                 "id INTEGER PRIMARY KEY," +
+                "fecha_inicio TEXT NOT NULL," +
+                "hora_inicio TEXT NOT NULL," +
                 "vehicle_id INTEGER NOT NULL);";
         db.execSQL(createTable);
 
         createTable = "CREATE TABLE ruta (" +
                 "id INTEGER PRIMARY KEY," +
+                "nombre TEXT NOT NULL," +
                 "origen_lat TEXT NOT NULL," +
                 "origen_lng TEXT NOT NULL," +
                 "destino_lat TEXT NOT NULL," +

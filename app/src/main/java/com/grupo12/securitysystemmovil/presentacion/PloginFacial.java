@@ -26,12 +26,16 @@ import com.google.gson.JsonObject;
 
 import com.grupo12.securitysystemmovil.MainActivity;
 import com.grupo12.securitysystemmovil.R;
+import com.grupo12.securitysystemmovil.dato.Evento.DeventoSync;
 import com.grupo12.securitysystemmovil.negocio.NloginFacial;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class PloginFacial extends AppCompatActivity {
+
+    //        Iniciar Eventos al backend
+    private DeventoSync devSync;
 
     private EditText editCi;
     private Button btnVerificar;
@@ -54,6 +58,10 @@ public class PloginFacial extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plogin_facial);
+
+//        Iniciar Eventos al backend
+        devSync = new DeventoSync(getApplicationContext());
+        devSync.iniciar();
 
         editCi = findViewById(R.id.editCi);
         btnVerificar = findViewById(R.id.btnVerificar);

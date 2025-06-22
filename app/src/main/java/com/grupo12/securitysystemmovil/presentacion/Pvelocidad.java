@@ -1,7 +1,6 @@
 package com.grupo12.securitysystemmovil.presentacion;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -16,7 +15,6 @@ import androidx.core.app.ActivityCompat;
 import com.google.android.gms.location.Priority;
 import com.grupo12.securitysystemmovil.R;
 import com.grupo12.securitysystemmovil.dato.Evento.DeventoSync;
-import com.grupo12.securitysystemmovil.dato.Seguimiento.SeguimientoService;
 import com.grupo12.securitysystemmovil.negocio.Nvelocidad;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -52,10 +50,6 @@ public class Pvelocidad extends AppCompatActivity {
         locationClient = LocationServices.getFusedLocationProviderClient(this);
 
         solicitarPermisos();
-
-        Intent intent = new Intent(this, SeguimientoService.class);
-        stopService(intent);
-
     }
 
     private void solicitarPermisos() {
