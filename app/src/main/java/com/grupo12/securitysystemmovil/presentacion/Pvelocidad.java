@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,7 +46,6 @@ public class Pvelocidad extends AppCompatActivity {
         nvelocidad.umbralVelocidad(this);
 
         tvAlertaVelocidad = findViewById(R.id.tvAlertaVelocidad);
-        nvelocidad.setTextViewAlerta(tvAlertaVelocidad); // se lo pasamos a la lógica
 
         locationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -78,6 +78,12 @@ public class Pvelocidad extends AppCompatActivity {
                     tvVelocidad.setText(String.format("Velocidad: %d km/h", Math.round(velocidadKmh)));
 
                     nvelocidad.procesarVelocidad(location);
+
+                    if (velocidadKmh > nvelocidad.getUmbralVelocidad()) {
+                        tvAlertaVelocidad.setVisibility(View.VISIBLE);
+                    } else {
+                        tvAlertaVelocidad.setVisibility(View.GONE);
+                    }
                 }
             }
         }, Looper.getMainLooper());

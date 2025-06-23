@@ -35,7 +35,7 @@ import java.util.concurrent.Executors;
 public class PloginFacial extends AppCompatActivity {
 
     //        Iniciar Eventos al backend
-    private DeventoSync devSync;
+//    private DeventoSync devSync;
 
     private EditText editCi;
     private Button btnVerificar;
@@ -60,8 +60,8 @@ public class PloginFacial extends AppCompatActivity {
         setContentView(R.layout.activity_plogin_facial);
 
 //        Iniciar Eventos al backend
-        devSync = new DeventoSync(getApplicationContext());
-        devSync.iniciar();
+//        devSync = new DeventoSync(getApplicationContext());
+//        devSync.iniciar();
 
         editCi = findViewById(R.id.editCi);
         btnVerificar = findViewById(R.id.btnVerificar);

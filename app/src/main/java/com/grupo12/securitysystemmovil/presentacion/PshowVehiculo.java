@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
+import com.grupo12.securitysystemmovil.MainActivity;
 import com.grupo12.securitysystemmovil.R;
 import com.grupo12.securitysystemmovil.dato.Dvehiculo;
 import com.grupo12.securitysystemmovil.dato.Evento.DeventoSync;
@@ -114,7 +115,7 @@ public class PshowVehiculo extends AppCompatActivity {
 
 
     private void irPloginFacial() {
-        Intent intent = new Intent(this, PloginFacial.class);
+        Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }

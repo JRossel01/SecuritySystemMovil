@@ -52,32 +52,25 @@ public class MapaIconos {
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
-    public static BitmapDescriptor IconoUbicacionActual() {
-        int tamaño = 80;
+    public static Bitmap IconoUbicacionActual() {
+        int tamaño = 70; // tamaño reducido
         Bitmap bitmap = Bitmap.createBitmap(tamaño, tamaño, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
-        // 🔵 Círculo blanco semitransparente
+        // 🔵 Fondo blanco semitransparente
         Paint fondo = new Paint();
         fondo.setColor(Color.WHITE);
-        fondo.setAlpha(180); // Transparencia (0-255)
+        fondo.setAlpha(180);
         fondo.setAntiAlias(true);
         canvas.drawCircle(tamaño / 2f, tamaño / 2f, tamaño / 2.2f, fondo);
 
-        // 🔷 Flecha azul
-        Paint paintFlecha = new Paint();
-        paintFlecha.setColor(Color.parseColor("#2196F3")); // Azul estilo Google
-        paintFlecha.setAntiAlias(true);
+        // 🔵 Círculo azul más pequeño (representa la ubicación)
+        Paint circuloAzul = new Paint();
+        circuloAzul.setColor(Color.parseColor("#2196F3")); // azul
+        circuloAzul.setAntiAlias(true);
+        canvas.drawCircle(tamaño / 2f, tamaño / 2f, tamaño / 4f, circuloAzul); // círculo azul centrado
 
-        Path path = new Path();
-        path.moveTo(tamaño / 2f, tamaño / 5f); // punta
-        path.lineTo(tamaño * 4f / 5f, tamaño * 3.5f / 5f); // base derecha
-        path.lineTo(tamaño / 2f, tamaño * 4.2f / 5f); // centro base
-        path.lineTo(tamaño * 1f / 5f, tamaño * 3.5f / 5f); // base izquierda
-        path.close();
-
-        canvas.drawPath(path, paintFlecha);
-
-        return BitmapDescriptorFactory.fromBitmap(bitmap);
+        return bitmap;
     }
+
 }

@@ -23,6 +23,12 @@
         android:theme="@style/Theme.SecuritySystemMovil"
         tools:targetApi="31">
         <activity
+            android:name=".presentacion.Pnavegacion"
+            android:exported="false" />
+        <activity
+            android:name=".presentacion.PcambioConductor"
+            android:exported="false" />
+        <activity
             android:name=".presentacion.PfinViaje"
             android:exported="false" />
         <activity

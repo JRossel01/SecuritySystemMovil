@@ -127,26 +127,19 @@ public class Psomnolencia extends AppCompatActivity {
             return;
         }
 
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(location -> {
-                    if (location != null) {
-                        double lat = location.getLatitude();
-                        double lon = location.getLongitude();
+        InputImage image = InputImage.fromMediaImage(
+                imageProxy.getImage(),
+                imageProxy.getImageInfo().getRotationDegrees()
+        );
 
-                        InputImage image = InputImage.fromMediaImage(imageProxy.getImage(), imageProxy.getImageInfo().getRotationDegrees());
-
-                        detector.process(image)
-                                .addOnSuccessListener(faces -> {
-                                    nsomnolencia.evaluarSomnolencia(faces, lat, lon);  // usa ubicación exacta
-                                    imageProxy.close();
-                                })
-                                .addOnFailureListener(e -> imageProxy.close());
-                    } else {
-                        Log.w("Ubicacion", "No se pudo obtener ubicación");
-                        imageProxy.close();
-                    }
-                });
+        detector.process(image)
+                .addOnSuccessListener(faces -> {
+                    nsomnolencia.evaluarSomnolencia(this, faces);
+                    imageProxy.close();
+                })
+                .addOnFailureListener(e -> imageProxy.close());
     }
+
 
 
     @Override

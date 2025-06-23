@@ -1,9 +1,16 @@
 package com.grupo12.securitysystemmovil.negocio;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.PointF;
+import android.Manifest;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceContour;
 import com.grupo12.securitysystemmovil.dato.Dsomnolencia;
@@ -38,20 +45,39 @@ public class Nsomnolencia {
         dsomnolencia = new Dsomnolencia(context);
     }
 
-    public void evaluarSomnolencia(List<Face> faces, double latitud, double longitud) {
-        this.latitudActual = latitud;
-        this.longitudActual = longitud;
 
-        if (faces.isEmpty()) {
+    public void evaluarSomnolencia(Context context, List<Face> faces) {
+        if (faces == null || faces.isEmpty()) {
             Log.d("Rostro", "Rostro no detectado - asegúrese de que la cámara está correctamente posicionada.");
             return;
         }
 
-        Face face = faces.get(0);
-        detectarMicrosueno(face);
-        detectarBostezo(face);
-        detectarCabeceo(face);
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.w("Nsomnolencia", "Permiso de ubicación no otorgado.");
+            return;
+        }
+
+        FusedLocationProviderClient client = LocationServices.getFusedLocationProviderClient(context);
+
+        client.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        latitudActual = location.getLatitude();
+                        longitudActual = location.getLongitude();
+
+                        Face face = faces.get(0);
+                        detectarMicrosueno(face);
+                        detectarBostezo(face);
+                        detectarCabeceo(face);
+                    } else {
+                        Log.w("Nsomnolencia", "No se pudo obtener ubicación en tiempo real.");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Nsomnolencia", "Error al obtener ubicación: " + e.getMessage());
+                });
     }
+
 
     private void detectarMicrosueno(Face face) {
         Float ojoIzq = face.getLeftEyeOpenProbability();
@@ -95,7 +121,7 @@ public class Nsomnolencia {
                 if (microsuenoDetectado) {
                     float segundos = microsuenoFrames / 5.0f;
                     String mensaje = "Microsueño — duración: " + segundos + " segundos";
-                    dsomnolencia.registrarEvento(mensaje, "Somnolencia", "Informacion", latitudActual, longitudActual);
+                    dsomnolencia.registrarEvento(mensaje, "Somnolencia", "Critico", latitudActual, longitudActual);
                     Log.d("Somnolencia", mensaje);
                 }
 
@@ -103,7 +129,7 @@ public class Nsomnolencia {
                 if (ojosCerradosDetectado) {
                     float segundos = ojosCerradosFrames / 5.0f;
                     String mensaje = "Ojos cerrados — duración: " + segundos + " segundos";
-                    dsomnolencia.registrarEvento(mensaje, "Somnolencia", "Informacion", latitudActual, longitudActual);
+                    dsomnolencia.registrarEvento(mensaje, "Somnolencia", "Advertencia", latitudActual, longitudActual);
                     Log.d("Somnolencia", mensaje);
                 }
 
@@ -140,7 +166,7 @@ public class Nsomnolencia {
                         " (Proporción: " + proporcion + ")");
 
                 if (!bostezoRegistrado && bocaAbiertaFrames >= BOCA_UMBRAL_FRAMES) {
-                    String mensaje = "Bostezo detectado (boca abierta por más de " + (BOCA_UMBRAL_FRAMES / 5f) + " segundos)";
+                    String mensaje = "Bostezo detectado, duración: " + (BOCA_UMBRAL_FRAMES / 5f) + " segundos)";
                     dsomnolencia.registrarEvento(mensaje, "Somnolencia", "Advertencia", latitudActual, longitudActual);
                     Log.d("Somnolencia", mensaje);
                     bostezoRegistrado = true;

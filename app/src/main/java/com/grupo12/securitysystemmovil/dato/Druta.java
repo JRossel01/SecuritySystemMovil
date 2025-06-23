@@ -4,23 +4,35 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.android.PolyUtil;
 import com.grupo12.securitysystemmovil.movilBD.movilBD;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Druta {
     public LatLng origen;
     public List<LatLng> paradas;
     public LatLng destino;
-    private String idVehiculo;
     private movilBD dbHelper;
+    private static final String API_KEY = "AIzaSyCgiLS3a1Rq5YKPkvaCentLKoV1o6256ek";
 
     public Druta(Context context) {
         dbHelper = new movilBD(context);
@@ -175,5 +187,76 @@ public class Druta {
         cursor.close();
         db.close();
         return nombre;
+    }
+
+    public interface CallbackRutaGoogle {
+        void onRutaObtenida(List<LatLng> ruta);
+    }
+
+    public void obtenerRutaGoogleAsync(LatLng origen, List<LatLng> paradas, LatLng destino, CallbackRutaGoogle callback) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            List<LatLng> resultado = new ArrayList<>();
+            try {
+                String url = construirUrl(origen, paradas, destino);
+                Log.d("Druta", "URL solicitada: " + url);
+
+                HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("User-Agent", "Grupo12-TransCopacabana/1.0");
+
+                if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                    Log.e("Druta", "Respuesta HTTP no exitosa: " + conn.getResponseCode());
+                    callback.onRutaObtenida(resultado);
+                    return;
+                }
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder json = new StringBuilder();
+                String linea;
+                while ((linea = reader.readLine()) != null) {
+                    json.append(linea);
+                }
+                reader.close();
+
+                Log.d("Druta", "Respuesta completa JSON: " + json);
+
+                JSONObject respuesta = new JSONObject(json.toString());
+                JSONArray rutas = respuesta.getJSONArray("routes");
+                if (rutas.length() > 0) {
+                    JSONObject overviewPolyline = rutas.getJSONObject(0).getJSONObject("overview_polyline");
+                    String puntos = overviewPolyline.getString("points");
+                    Log.d("Druta", "Cadena de puntos de la polilínea: " + puntos);
+                    resultado.addAll(PolyUtil.decode(puntos));
+                    Log.d("Druta", "Ruta decodificada: " + resultado.toString());
+                }
+
+            } catch (Exception e) {
+                Log.e("Druta", "Excepción al consumir Directions API: " + e.getMessage(), e);
+            }
+
+            // Ejecutar callback en hilo principal
+            new Handler(Looper.getMainLooper()).post(() -> callback.onRutaObtenida(resultado));
+        });
+    }
+
+
+    private String construirUrl(LatLng origen, List<LatLng> paradas, LatLng destino) {
+        StringBuilder url = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?");
+        url.append("origin=").append(origen.latitude).append(",").append(origen.longitude);
+        url.append("&destination=").append(destino.latitude).append(",").append(destino.longitude);
+        url.append("&mode=driving");
+
+        if (paradas != null && !paradas.isEmpty()) {
+            url.append("&waypoints=");
+            for (int i = 0; i < paradas.size(); i++) {
+                LatLng p = paradas.get(i);
+                url.append(p.latitude).append(",").append(p.longitude);
+                if (i != paradas.size() - 1) url.append("|");
+            }
+        }
+
+        url.append("&key=").append(API_KEY);
+        return url.toString();
     }
 }
