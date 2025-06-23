@@ -13,7 +13,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceContour;
-import com.grupo12.securitysystemmovil.dato.Dsomnolencia;
+import com.grupo12.securitysystemmovil.dato.Somnolencia.Dsomnolencia;
 
 import java.util.List;
 

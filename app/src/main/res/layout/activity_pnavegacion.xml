@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mapa_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#FFF8E1">
+    android:layout_height="match_parent">
+
+
+    <fragment
+        android:id="@+id/mapa"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"
@@ -14,74 +20,113 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:scaleType="fitCenter"
-        android:visibility="gone"/>
+        android:scaleType="fitCenter" />
 
-    <fragment
-        android:id="@+id/mapa"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="visible"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+
+        <Button
+            android:id="@+id/btnCambiarConductor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cambiar"
+            android:layout_marginEnd="16dp"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:backgroundTint="@color/verde"
+            android:textColor="#FFFFFF" />
+
+        <Spinner
+            android:id="@+id/spinnerConductores"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="16dp"
+            android:spinnerMode="dropdown"
+            android:background="@android:drawable/btn_dropdown" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvVelocidad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 km/h"
+        android:textColor="#000000"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:layout_marginEnd="50dp"
+        android:layout_marginTop="100dp"
+        android:layout_gravity="end" />
+
+    <TextView
+        android:id="@+id/tvAlertaVelocidad"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="¡Exceso de velocidad!"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:background="#F44336"
+        android:padding="12dp"
+        android:elevation="4dp"
+        android:visibility="gone"
+        android:textSize="20sp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="100dp"/>
+
+    <LinearLayout
+        android:id="@+id/bottomLinear"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:paddingTop="16dp"
+        android:paddingBottom="30dp">
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginEnd="16dp"
+        android:layout_gravity="bottom"
+        android:layout_weight="1"
         android:background="#66000000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        >
 
         <TextView
             android:id="@+id/tvDistanciaParada"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#EEEEEE"
-            android:textSize="16sp"
-            android:text="Parada a: 0 Km" />
+            android:textSize="20sp"
+            android:text="Parada: 0 Km" />
 
         <TextView
             android:id="@+id/tvDistanciaDestino"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#EEEEEE"
-            android:textSize="16sp"
-            android:text="Fin a: 0 Km" />
+            android:textSize="20sp"
+            android:text="Destino: 0 Km" />
     </LinearLayout>
 
-    <Spinner
-        android:id="@+id/spinnerConductores"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        android:layout_marginStart="20dp"
-        android:textColor="#000000"
-        android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/btnCambiarConductor"
-        android:visibility="gone"/>
-
     <Button
-        android:id="@+id/btnCambiarConductor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cambiar"
-        android:textColor="#FFFFFF"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="50dp"
-        android:layout_marginEnd="20dp"
-        android:textSize="18sp"/>
+        android:id="@+id/btnFinViaje"
+        android:layout_width="280sp"
+        android:layout_height="60dp"
+        android:layout_weight="1"
+        android:layout_marginEnd="16dp"
+        android:text="Finalizar"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:backgroundTint="@color/rojo"
+        android:textColor="#FFFFFF" />
+    </LinearLayout>
 
-
-
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

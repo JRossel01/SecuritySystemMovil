@@ -70,8 +70,6 @@ public class PcambioConductor extends AppCompatActivity {
                 boolean exito = ncambio.activarConductor(idSeleccionado);
                 if (exito) {
                     Toast.makeText(this, "Conductor cambiado correctamente", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(PcambioConductor.this, MainActivity.class));
-                    finish();
                 } else {
                     Toast.makeText(this, "Error al cambiar de conductor", Toast.LENGTH_SHORT).show();
                 }
@@ -88,12 +86,28 @@ public class PcambioConductor extends AppCompatActivity {
                 btnCambiarConductor.setEnabled(true);
                 btnCambiarConductor.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.verde));
                 spinnerConductores.setVisibility(View.VISIBLE);
+                actualizarSpinner();
             } else {
                 btnCambiarConductor.setEnabled(false);
                 btnCambiarConductor.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.gris));
                 spinnerConductores.setVisibility(View.GONE);
             }
         });
+    }
+
+    private void actualizarSpinner() {
+        listaConductores = ncambio.obtenerConductoresInactivos();
+        List<String> nombres = ncambio.obtenerNombresConductores();
+
+        if (nombres.isEmpty()) {
+            Toast.makeText(this, "No hay conductores inactivos registrados", Toast.LENGTH_LONG).show();
+            btnCambiarConductor.setEnabled(false);
+            btnCambiarConductor.setBackgroundColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+        } else {
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, nombres);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerConductores.setAdapter(adapter);
+        }
     }
 
 

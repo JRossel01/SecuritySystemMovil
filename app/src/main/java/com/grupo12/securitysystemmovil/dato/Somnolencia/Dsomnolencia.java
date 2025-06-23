@@ -1,4 +1,4 @@
-package com.grupo12.securitysystemmovil.dato;
+package com.grupo12.securitysystemmovil.dato.Somnolencia;
 
 import android.content.ContentValues;
 import android.content.Context;

@@ -285,7 +285,7 @@ public class NloginFacial {
     }
 
     private void redirigirPorRol(Context context, int rol) {
-        Class<?> destino = (rol == 1) ? PeditVehiculo.class : MainActivity.class;
+        Class<?> destino = (rol == 1) ? PeditVehiculo.class : PpreViaje.class;
         Intent intent = new Intent(context, destino);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         context.startActivity(intent);

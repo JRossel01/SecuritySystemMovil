@@ -1,7 +1,6 @@
 package com.grupo12.securitysystemmovil.presentacion;
 
 import android.Manifest;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,7 +23,6 @@ import androidx.core.content.ContextCompat;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
 
-import com.grupo12.securitysystemmovil.MainActivity;
 import com.grupo12.securitysystemmovil.R;
 import com.grupo12.securitysystemmovil.dato.Evento.DeventoSync;
 import com.grupo12.securitysystemmovil.negocio.NloginFacial;

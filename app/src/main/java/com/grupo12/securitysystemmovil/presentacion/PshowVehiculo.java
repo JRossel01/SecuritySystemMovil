@@ -55,10 +55,6 @@ public class PshowVehiculo extends AppCompatActivity {
 
         pedirPermisos();
 
-//        Iniciar Seguimiento
-//        Intent intent = new Intent(this, SeguimientoService.class);
-//        startService(intent);
-
         //    Terminar Eventos al backend
         devSync = new DeventoSync(getApplicationContext());
         devSync.detener();

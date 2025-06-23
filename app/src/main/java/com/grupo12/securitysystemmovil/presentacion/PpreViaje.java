@@ -120,8 +120,9 @@ public class PpreViaje extends AppCompatActivity {
                     btnIniciarViaje.setText("Iniciar Viaje");
                     btnIniciarViaje.setOnClickListener(v -> {
                         npreViaje.registrarEvento(PpreViaje.this);
-                        Intent intent = new Intent(PpreViaje.this, MainActivity.class);
+                        Intent intent = new Intent(PpreViaje.this, Pnavegacion.class);
                         startActivity(intent);
+                        finish();
                     });
                 });
             }

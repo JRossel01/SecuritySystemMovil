@@ -192,6 +192,7 @@ public class Nruta {
                 if (!destinoRegistrado && distanciaDestino < 50f) {
                     crearEventoLlegada("destino", location.getLatitude(), location.getLongitude(), 0, true);
                     destinoRegistrado = true;
+                    callback.onActualizarPosicion(posicionActual, 0, distanciaDestino);
                 }
 
                 // Callback visual

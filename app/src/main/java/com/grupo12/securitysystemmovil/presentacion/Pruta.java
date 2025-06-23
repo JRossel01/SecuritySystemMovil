@@ -1,6 +1,7 @@
 package com.grupo12.securitysystemmovil.presentacion;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -10,7 +11,10 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,7 +37,9 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.SphericalUtil;
 
 
+import com.grupo12.securitysystemmovil.MainActivity;
 import com.grupo12.securitysystemmovil.R;
+import com.grupo12.securitysystemmovil.negocio.NcambioConductor;
 import com.grupo12.securitysystemmovil.negocio.Nruta;
 import com.grupo12.securitysystemmovil.utils.MapaIconos;
 
@@ -56,6 +62,10 @@ public class Pruta extends AppCompatActivity implements OnMapReadyCallback, Sens
     private List<LatLng> recorridoRealizado = new ArrayList<>();
     private Polyline polylineRecorrido;
     private FusedLocationProviderClient locationClient;
+
+    private Button btnFinalizar;
+    private NcambioConductor ncambio;
+    private float distanciaDestino = 0;
 
 
     private static final double UMBRAL_PARADA_METROS = 50;
@@ -86,6 +96,29 @@ public class Pruta extends AppCompatActivity implements OnMapReadyCallback, Sens
         tvDistanciaParada = findViewById(R.id.tvDistanciaParada);
         tvDistanciaDestino = findViewById(R.id.tvDistanciaDestino);
 
+// Botón para finalizar
+        btnFinalizar = findViewById(R.id.btnFinViaje);
+
+        // Llama a tu función de verificar ubicaciones
+        nruta.verificarUbicacion(this, (posicion, distanciaParada, distanciaDestino) -> {
+            this.distanciaDestino = distanciaDestino;
+            // Si la distancia al destino es menor a 50 metros, muestra el botón "Finalizar"
+            if (distanciaDestino < 50) {
+                btnFinalizar.setVisibility(View.VISIBLE);
+            } else {
+                btnFinalizar.setVisibility(View.GONE);
+            }
+        });
+
+        btnFinalizar.setOnClickListener(v -> {
+            // Redirige al MainActivity o la actividad que necesites
+            if (distanciaDestino < 50) {
+                Intent intent = new Intent(Pruta.this, MainActivity.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(this, "Debes estar cerca del destino para finalizar el viaje.", Toast.LENGTH_SHORT).show();
+            }
+        });
 
     }
 
