@@ -118,4 +118,10 @@ public class Nvelocidad {
         return umbralVelocidad;
     }
 
+    public boolean esFrenoBrusco(float vAnterior, float vActual, long tAnterior, long tActual) {
+        float diferencia = vAnterior - vActual;
+        long deltaTiempo = tActual - tAnterior;
+        return diferencia >= 15f && deltaTiempo <= 1500 && vActual < 1.0f;
+    }
+
 }
