@@ -34,8 +34,8 @@ public class Dtrip {
         void onFailure(String error);
     }
 
-    public void guardarTrip(int userId, int idConductorActual, TripCallback callback) {
-        Call<JsonObject> call = apiService.getTripActivo(userId);
+    public void guardarTrip(String ci, int idConductorActual, TripCallback callback) {
+        Call<JsonObject> call = apiService.getTripActivo(ci);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -49,7 +49,7 @@ public class Dtrip {
                     }
                 } else {
                     Log.e("Dtrip", "Respuesta fallida del servidor");
-                    callback.onFailure("Respuesta fallida del servidor");
+                    callback.onFailure("No hay viaje activo");
                 }
             }
 

@@ -55,7 +55,7 @@ public class SeguimientoService extends Service {
 
     private void iniciarSeguimiento() {
         LocationRequest request = new LocationRequest.Builder(1000)
-                .setMinUpdateIntervalMillis(500)  // Intervalo de 500 ms entre actualizaciones
+                .setMinUpdateIntervalMillis(1000)  // Intervalo de 500 ms entre actualizaciones
                 .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 .build();
 

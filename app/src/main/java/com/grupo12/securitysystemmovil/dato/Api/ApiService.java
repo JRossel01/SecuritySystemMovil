@@ -27,8 +27,8 @@ public interface ApiService {
     Call<JsonObject> enviarEvento(@Body DeventoRequest evento);
 
     // Recibe datos del viaje del usuario
-    @GET("trip/activo/{userId}")
-    Call<JsonObject> getTripActivo(@Path("userId") int userId);
+    @GET("trip/activo/{ci}")
+    Call<JsonObject> getTripActivo(@Path("ci") String  ci);
 
     // Enviar la ubicación al backend
     @POST("gpslocations")

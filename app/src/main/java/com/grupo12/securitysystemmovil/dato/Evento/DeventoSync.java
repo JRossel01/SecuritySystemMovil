@@ -22,7 +22,7 @@ public class DeventoSync {
     private Context context;
     private SQLiteDatabase db;
     private Handler handler = new Handler();
-    private long intervaloMillis = 1000; // Revisión cada 1 segundo
+    private long intervaloMillis = 3000; // Revisión cada 3 segundos
     private ApiService apiService;
 
     public DeventoSync(Context context) {

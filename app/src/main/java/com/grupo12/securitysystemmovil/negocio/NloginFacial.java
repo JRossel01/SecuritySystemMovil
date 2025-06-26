@@ -190,7 +190,7 @@ public class NloginFacial {
             if (resultado) {
                 Log.d("NloginFacial", "Conductor guardado correctamente");
 
-                ntrip.guardarTrip(userId, userId, new Ntrip.TripCallback() {
+                ntrip.guardarTrip(ci, userId, new Ntrip.TripCallback() {
                     @Override
                     public void onSuccess() {
                         int vehicleIdLocal = nvehiculo.obtenerVehiculoLocal().id;

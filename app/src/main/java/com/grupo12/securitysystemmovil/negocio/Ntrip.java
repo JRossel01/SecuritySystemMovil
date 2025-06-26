@@ -18,8 +18,8 @@ public class Ntrip {
     }
 
     // Llama a la descarga y guardado local del trip activo
-    public void guardarTrip(int userId, int idConductorActual, TripCallback callback) {
-        dtrip.guardarTrip(userId, idConductorActual, new Dtrip.TripCallback() {
+    public void guardarTrip(String ci, int idConductorActual, TripCallback callback) {
+        dtrip.guardarTrip(ci, idConductorActual, new Dtrip.TripCallback() {
             @Override
             public void onSuccess() {
                 Log.i("Ntrip", "Viaje activo guardado correctamente");
