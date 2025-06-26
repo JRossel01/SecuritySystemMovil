@@ -16,11 +16,13 @@ import android.view.MotionEvent;
 
 import com.grupo12.securitysystemmovil.R;
 import com.grupo12.securitysystemmovil.dato.Dvehiculo;
+import com.grupo12.securitysystemmovil.dato.Evento.DeventoSync;
+import com.grupo12.securitysystemmovil.dato.Seguimiento.SeguimientoService;
 import com.grupo12.securitysystemmovil.negocio.Nvehiculo;
 
 public class PshowVehiculo extends AppCompatActivity {
 
-    //    private DeventoSync devSync;
+        private DeventoSync devSync;
 
     private TextView txtNombreVehiculo, txtPlacaVehiculo;
     private Nvehiculo nvehiculo;
@@ -41,8 +43,8 @@ public class PshowVehiculo extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pshow_vehiculo);
 
-//        devSync = new DeventoSync(getApplicationContext());
-//        devSync.iniciar();
+        devSync = new DeventoSync(getApplicationContext());
+        devSync.iniciar();
 
         txtNombreVehiculo = findViewById(R.id.txtNombreVehiculo);
         txtPlacaVehiculo = findViewById(R.id.txtPlacaVehiculo);
@@ -50,8 +52,8 @@ public class PshowVehiculo extends AppCompatActivity {
 
         pedirPermisos();
 
-//        Intent intent = new Intent(this, SeguimientoService.class);
-//        startService(intent);
+        Intent intent = new Intent(this, SeguimientoService.class);
+        startService(intent);
 
         mostrarDatosVehiculo();
 
