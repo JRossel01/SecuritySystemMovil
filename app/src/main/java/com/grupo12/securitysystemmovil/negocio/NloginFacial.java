@@ -2,7 +2,6 @@ package com.grupo12.securitysystemmovil.negocio;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
@@ -12,10 +11,10 @@ import android.util.Log;
 
 import androidx.camera.core.ImageProxy;
 import androidx.core.app.ActivityCompat;
+import androidx.core.util.Consumer;
 
 import com.google.android.gms.location.Priority;
 import com.google.gson.JsonObject;
-import com.grupo12.securitysystemmovil.MainActivity;
 import com.grupo12.securitysystemmovil.dato.DloginFacial;
 
 import java.io.ByteArrayOutputStream;
@@ -24,7 +23,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import android.location.Location;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -34,6 +32,7 @@ import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
 import com.google.mlkit.vision.face.FaceDetector;
 import com.google.mlkit.vision.face.FaceDetectorOptions;
+import com.grupo12.securitysystemmovil.negocio.loginFacial.NfaceRecognition;
 import com.grupo12.securitysystemmovil.presentacion.PeditVehiculo;
 import com.grupo12.securitysystemmovil.presentacion.Perror.PsinViaje;
 import com.grupo12.securitysystemmovil.presentacion.Perror.PvehiculoIncorrecto;
@@ -44,7 +43,9 @@ import android.content.pm.PackageManager;
 
 public class NloginFacial {
 
-    private static final float UMBRAL_COMPARACION_CENTROS = 100;
+    private NfaceRecognition recognizerCache = null;
+    private Bitmap referenciaBitmap;
+    private FaceDetector detector;
 
     public interface OnUsuarioPreparadoListener {
         void onPreparado(JsonObject userInfo, Bitmap referenciaBitmap);
@@ -55,7 +56,7 @@ public class NloginFacial {
         void onResultado(boolean coincide);
     }
 
-    public void procesarUsuarioPorCI(String ci, OnUsuarioPreparadoListener listener) {
+    public void procesarUsuarioPorCI(Context context, String ci, OnUsuarioPreparadoListener listener) {
         Log.d("NloginFacial", "Iniciando búsqueda del usuario con CI: " + ci);
         DloginFacial dlogin = new DloginFacial();
         dlogin.buscarUsuarioPorCI(ci, new DloginFacial.OnUserFoundListener() {
@@ -69,6 +70,7 @@ public class NloginFacial {
                     @Override
                     public void onDescargada(Bitmap bitmap) {
                         Log.d("NloginFacial", "Imagen de referencia descargada correctamente");
+                        entrenarDesdeImagenReferencia(context, bitmap, ci);
                         listener.onPreparado(userData, bitmap);
                     }
 
@@ -89,49 +91,9 @@ public class NloginFacial {
         });
     }
 
-    public void compararConReferencia(Bitmap referencia, Bitmap actual, OnComparacionListener listener) {
-        Log.d("NloginFacial", "Iniciando comparación de rostros");
-        InputImage imagenReferencia = InputImage.fromBitmap(referencia, 0);
-        InputImage imagenActual = InputImage.fromBitmap(actual, 0);
-
-        FaceDetectorOptions opciones = new FaceDetectorOptions.Builder()
-                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-                .enableTracking()
-                .build();
-
-        FaceDetector detector = FaceDetection.getClient(opciones);
-
-        Task<List<Face>> tareaReferencia = detector.process(imagenReferencia);
-        tareaReferencia.addOnSuccessListener(carasReferencia -> {
-            Log.d("NloginFacial", "Detección en imagen de referencia completada. Rostros encontrados: " + carasReferencia.size());
-
-            Task<List<Face>> tareaActual = detector.process(imagenActual);
-            tareaActual.addOnSuccessListener(carasActual -> {
-                Log.d("NloginFacial", "Detección en imagen actual completada. Rostros encontrados: " + carasActual.size());
-                boolean resultado = false;
-
-                if (!carasReferencia.isEmpty() && !carasActual.isEmpty()) {
-                    Face faceRef = carasReferencia.get(0);
-                    Face faceAct = carasActual.get(0);
-
-                    float diferencia = Math.abs(faceRef.getBoundingBox().centerX() - faceAct.getBoundingBox().centerX())
-                            + Math.abs(faceRef.getBoundingBox().centerY() - faceAct.getBoundingBox().centerY());
-
-                    Log.d("NloginFacial", "Diferencia entre centros de rostros: " + diferencia);
-                    resultado = diferencia < UMBRAL_COMPARACION_CENTROS;
-                } else {
-                    Log.w("NloginFacial", "No se detectaron suficientes rostros para comparar");
-                }
-
-                listener.onResultado(resultado);
-            }).addOnFailureListener(e -> {
-                Log.e("NloginFacial", "Error procesando imagen actual", e);
-                listener.onResultado(false);
-            });
-        }).addOnFailureListener(e -> {
-            Log.e("NloginFacial", "Error procesando imagen de referencia", e);
-            listener.onResultado(false);
-        });
+    public void entrenarDesdeImagenReferencia(Context context, Bitmap referencia, String nombre) {
+        NfaceRecognition recognizer = getRecognizer(context);
+        recognizer.generarEmbeddingsDesdeBitmap(referencia, nombre);
     }
 
     public static Bitmap convertirImageProxyABitmap(ImageProxy image) {
@@ -163,12 +125,13 @@ public class NloginFacial {
         return BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.length);
     }
 
-    public void detectarRostro(Bitmap bitmap, java.util.function.Consumer<Boolean> callback) {
+    public void detectarRostro(Bitmap bitmap, Consumer<Boolean> callback) {
         InputImage image = InputImage.fromBitmap(bitmap, 0);
         FaceDetectorOptions options = new FaceDetectorOptions.Builder()
-                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
                 .build();
-        FaceDetector detector = FaceDetection.getClient(options);
+
+        detector = FaceDetection.getClient(options);
 
         detector.process(image)
                 .addOnSuccessListener(faces -> {
@@ -315,6 +278,44 @@ public class NloginFacial {
                     onComplete.run();
                 });
     }
+
+    public boolean compararEmbeddings(String nombreReferencia, float[] nuevoEmbedding) {
+        if (!recognizerCache.contieneEmbeddings(nombreReferencia)) {
+            Log.e("NloginFacial", "❌ No hay embeddings registrados para " + nombreReferencia);
+            return false;
+        }
+
+        float[] embRef = recognizerCache.getEmbeddings(nombreReferencia);
+        float distancia = calcularDistancia(embRef, nuevoEmbedding);
+        Log.d("NloginFacial", "📏 Distancia calculada: " + distancia);
+        return distancia <= 1.5f; // Ajusta si es necesario
+    }
+
+
+    private float calcularDistancia(float[] emb1, float[] emb2) {
+        float suma = 0;
+        for (int i = 0; i < emb1.length; i++) {
+            float diff = emb1[i] - emb2[i];
+            suma += diff * diff;
+        }
+        return (float) Math.sqrt(suma);
+    }
+
+    public NfaceRecognition getRecognizer(Context context) {
+        if (recognizerCache == null) {
+            recognizerCache = new NfaceRecognition(context);
+        }
+        return recognizerCache;
+    }
+
+    public void setReferenciaBitmap(Bitmap bitmap) {
+        this.referenciaBitmap = bitmap;
+    }
+
+    public Bitmap getReferenciaBitmap() {
+        return referenciaBitmap;
+    }
+
 
 
 }

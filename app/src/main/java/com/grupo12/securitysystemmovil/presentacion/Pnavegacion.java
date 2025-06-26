@@ -15,6 +15,7 @@ import android.os.Looper;
 import android.util.Log;
 import androidx.annotation.OptIn;
 
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -61,6 +62,7 @@ import com.grupo12.securitysystemmovil.R;
 import com.google.mlkit.vision.face.FaceDetector;
 import com.grupo12.securitysystemmovil.dato.Dconductor;
 import com.grupo12.securitysystemmovil.dato.Seguimiento.SeguimientoService;
+import com.grupo12.securitysystemmovil.negocio.NbotonEmergencia;
 import com.grupo12.securitysystemmovil.negocio.NcambioConductor;
 import com.grupo12.securitysystemmovil.negocio.Nruta;
 import com.grupo12.securitysystemmovil.negocio.Nsomnolencia;
@@ -126,8 +128,8 @@ public class Pnavegacion extends AppCompatActivity implements OnMapReadyCallback
 
         /////////////////Seguimiento////////////////////
         //        Iniciar Seguimiento
-//        Intent intent = new Intent(this, SeguimientoService.class);
-//        startService(intent);
+        Intent intent = new Intent(this, SeguimientoService.class);
+        startService(intent);
 
         /////////////////Velocidad////////////////////
         tvVelocidad = findViewById(R.id.tvVelocidad);
@@ -245,6 +247,19 @@ public class Pnavegacion extends AppCompatActivity implements OnMapReadyCallback
             }
         });
 
+    }
+    /////////////////Boton de Emergencia////////////////////
+    //    BotonEmergencia
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        Log.d("BotonEmergencia", "Botón presionado - KeyCode: " + keyCode);
+
+        if (keyCode == 85) {
+            new NbotonEmergencia(this).registrarEvento();
+            return true; // ya manejado
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
 
     /////////////////Velocidad////////////////////

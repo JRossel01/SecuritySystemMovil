@@ -38,15 +38,22 @@ dependencies {
     implementation(libs.material.v1110)
     implementation(libs.androidx.activity.v180)
     implementation(libs.androidx.constraintlayout.v214)
-    implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.camera.view)
-    implementation(libs.face.detection)
+    // CameraX View class (For camera preview)
+    implementation libs.androidx.camera.core.v120alpha04
+    implementation libs.androidx.camera.camera2.v120alpha04
+    implementation libs.androidx.camera.lifecycle.v120alpha04
+    implementation libs.androidx.camera.view.v120alpha04
+    //ML Kit (To detect faces)
+    implementation libs.face.detection.v1615
+    implementation libs.play.services.mlkit.face.detection
     implementation libs.play.services.maps
     implementation libs.play.services.location
     implementation libs.android.maps.utils
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+    //TensorFlow Lite libraries (To recognize faces)
+    implementation libs.tensorflow.lite.task.vision
+    implementation libs.tensorflow.lite.support
+    implementation libs.tensorflow.lite
 }

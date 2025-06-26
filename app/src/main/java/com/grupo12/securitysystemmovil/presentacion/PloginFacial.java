@@ -4,6 +4,7 @@ import android.Manifest;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Size;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -14,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
@@ -26,6 +28,7 @@ import com.google.gson.JsonObject;
 import com.grupo12.securitysystemmovil.R;
 import com.grupo12.securitysystemmovil.dato.Evento.DeventoSync;
 import com.grupo12.securitysystemmovil.negocio.NloginFacial;
+import com.grupo12.securitysystemmovil.negocio.loginFacial.NfaceRecognition;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,10 +36,10 @@ import java.util.concurrent.Executors;
 public class PloginFacial extends AppCompatActivity {
 
     //        Iniciar Eventos al backend
-//    private DeventoSync devSync;
+    private DeventoSync devSync;
 
     private EditText editCi;
-    private Button btnVerificar;
+    private Button btnVerificar, btnCapturar;
     private PreviewView previewView;
     private ExecutorService cameraExecutor;
     private Bitmap referenciaBitmap;
@@ -45,11 +48,46 @@ public class PloginFacial extends AppCompatActivity {
     private ProcessCameraProvider cameraProvider;
     private boolean loginCompletado = false;
     private JsonObject usuarioActual;
+    private String ciActual;
+    private ImageProxy lastImageProxy;
     private NloginFacial nloginFacial;
 
     private final ActivityResultLauncher<String[]> permisosLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestMultiplePermissions(),
-            result -> iniciarCamara()
+            result -> {
+                // Verificamos que todos los permisos fueron concedidos
+                boolean permisosOk = Boolean.TRUE.equals(result.getOrDefault(Manifest.permission.CAMERA, false)) &&
+                        Boolean.TRUE.equals(result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false)) &&
+                        Boolean.TRUE.equals(result.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false));
+
+                if (!permisosOk) {
+                    Toast.makeText(PloginFacial.this, "Permisos requeridos no concedidos", Toast.LENGTH_SHORT).show();
+                    btnVerificar.setEnabled(true);
+                    return;
+                }
+
+                // Ahora sí continuamos con el procesamiento facial
+                nloginFacial = new NloginFacial();
+                nloginFacial.procesarUsuarioPorCI(PloginFacial.this, ciActual, new NloginFacial.OnUsuarioPreparadoListener() {
+                    @Override
+                    public void onPreparado(@NonNull JsonObject userInfo, @NonNull Bitmap referencia) {
+                        runOnUiThread(() -> {
+                            referenciaBitmap = referencia;
+                            usuarioActual = userInfo;
+                            nloginFacial.setReferenciaBitmap(referencia);
+                            iniciarCamara();
+                            btnCapturar.setEnabled(true); // ← No lo olvides, también va aquí
+                        });
+                    }
+
+
+                    @Override
+                    public void onError(String error) {
+                        runOnUiThread(() -> Toast.makeText(PloginFacial.this, error, Toast.LENGTH_SHORT).show());
+                        btnVerificar.setEnabled(true);
+                    }
+                });
+            }
     );
 
     @Override
@@ -58,21 +96,64 @@ public class PloginFacial extends AppCompatActivity {
         setContentView(R.layout.activity_plogin_facial);
 
 //        Iniciar Eventos al backend
-//        devSync = new DeventoSync(getApplicationContext());
-//        devSync.iniciar();
+        devSync = new DeventoSync(getApplicationContext());
+        devSync.iniciar();
 
         editCi = findViewById(R.id.editCi);
         btnVerificar = findViewById(R.id.btnVerificar);
+        btnCapturar = findViewById(R.id.btnCapturar);
         previewView = findViewById(R.id.previewView);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
-        permisosLauncher.launch(new String[]{
-                Manifest.permission.CAMERA,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+        btnVerificar.setOnClickListener(v -> manejarVerificacion());
+
+        btnCapturar.setOnClickListener(v -> {
+            if (lastImageProxy == null) {
+                Toast.makeText(this, "Esperando imagen de cámara...", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            btnCapturar.setEnabled(false);
+
+            ImageProxy image = lastImageProxy;
+            lastImageProxy = null;
+
+            Bitmap bitmap = NloginFacial.convertirImageProxyABitmap(image);
+            if (bitmap == null) {
+                Toast.makeText(this, "No se pudo procesar la imagen", Toast.LENGTH_SHORT).show();
+                btnCapturar.setEnabled(true);
+                image.close();
+                return;
+            }
+
+            nloginFacial.getRecognizer(this).procesarImagenCamara(bitmap, this, new NfaceRecognition.OnEmbeddingsGeneradosListener() {
+                @Override
+                public void onEmbeddingsGenerados(float[] embeddingsActuales) {
+                    boolean coincide = nloginFacial.compararEmbeddings(ciActual, embeddingsActuales);
+                    runOnUiThread(() -> {
+                        if (coincide) {
+                            Toast.makeText(PloginFacial.this, "¡Acceso concedido!", Toast.LENGTH_SHORT).show();
+                            cameraProvider.unbindAll();
+                            cameraExecutor.shutdownNow();
+                            nloginFacial.guardarLocal(PloginFacial.this, usuarioActual, referenciaBitmap);
+                        } else {
+                            Toast.makeText(PloginFacial.this, "Rostro no coincide", Toast.LENGTH_SHORT).show();
+                            btnCapturar.setEnabled(true);
+                        }
+                        image.close();
+                    });
+                }
+
+                @Override
+                public void onError(String mensaje) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(PloginFacial.this, mensaje, Toast.LENGTH_SHORT).show();
+                        btnCapturar.setEnabled(true);
+                        image.close();
+                    });
+                }
+            });
         });
 
-        btnVerificar.setOnClickListener(v -> manejarVerificacion());
     }
 
     private void manejarVerificacion() {
@@ -82,22 +163,13 @@ public class PloginFacial extends AppCompatActivity {
             return;
         }
 
+        ciActual = ci;
         btnVerificar.setEnabled(false);
 
-        nloginFacial = new NloginFacial();
-        nloginFacial.procesarUsuarioPorCI(ci, new NloginFacial.OnUsuarioPreparadoListener() {
-            @Override
-            public void onPreparado(@NonNull JsonObject userInfo, @NonNull Bitmap referencia) {
-                referenciaBitmap = referencia;
-                usuarioActual = userInfo;
-                iniciarCamara();
-            }
-
-            @Override
-            public void onError(String error) {
-                runOnUiThread(() -> Toast.makeText(PloginFacial.this, error, Toast.LENGTH_SHORT).show());
-                btnVerificar.setEnabled(true);
-            }
+        permisosLauncher.launch(new String[]{
+                Manifest.permission.CAMERA,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
         });
     }
 
@@ -110,60 +182,24 @@ public class PloginFacial extends AppCompatActivity {
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
                 imageAnalysis = new ImageAnalysis.Builder()
+                        .setTargetResolution(new Size(1280, 720))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
 
                 imageAnalysis.setAnalyzer(cameraExecutor, image -> {
-                    if (referenciaBitmap == null) {
-                        image.close();
-                        return;
-                    }
-
-                    Bitmap bitmap = NloginFacial.convertirImageProxyABitmap(image);
-                    image.close();
-
-                    nloginFacial.detectarRostro(bitmap, hayRostro -> {
-                        if (hayRostro && !rostroDetectado && !loginCompletado) {
-                            rostroDetectado = true;
-
-                            nloginFacial.compararConReferencia(referenciaBitmap, bitmap, coincide -> {
-                                runOnUiThread(() -> {
-                                    if (coincide) {
-                                        loginCompletado = true;
-                                        Toast.makeText(PloginFacial.this, "¡Acceso concedido!", Toast.LENGTH_SHORT).show();
-                                        Log.d("PloginFacial", "¡Acceso concedido!");
-                                        cameraProvider.unbindAll();
-                                        cameraExecutor.shutdownNow(); // detener el executor
-
-                                        nloginFacial.guardarLocal(
-                                                PloginFacial.this,
-                                                usuarioActual,
-                                                referenciaBitmap
-                                        );
-                                    } else {
-                                        Toast.makeText(PloginFacial.this, "Rostro no coincide", Toast.LENGTH_SHORT).show();
-                                        rostroDetectado = false;
-                                    }
-                                });
-                            });
-                        }
-
-                    });
+                    if (lastImageProxy != null) lastImageProxy.close();
+                    lastImageProxy = image;
                 });
 
-
                 cameraProvider.unbindAll();
-                cameraProvider.bindToLifecycle(
-                        this,
-                        CameraSelector.DEFAULT_FRONT_CAMERA,
-                        preview,
-                        imageAnalysis
-                );
+                cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_FRONT_CAMERA, preview, imageAnalysis);
+
             } catch (Exception e) {
-                Log.e("PloginFacial", "Error iniciando cámara", e);
+                Log.e("NloginFacial", "Error iniciando cámara", e);
             }
         }, ContextCompat.getMainExecutor(this));
     }
+
 
     @Override
     protected void onDestroy() {
