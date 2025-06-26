@@ -10,7 +10,7 @@
         android:id="@+id/tvVelocidad"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Velocidad: 0 km/h"
+        android:text="0 km/h"
         android:textColor="#EEEEEE"
         android:textSize="22sp"
         android:textStyle="bold"

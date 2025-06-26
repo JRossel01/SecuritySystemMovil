@@ -91,8 +91,8 @@ public class DeventoSync {
                         cursor.getDouble(cursor.getColumnIndexOrThrow("latitud")),
                         cursor.getDouble(cursor.getColumnIndexOrThrow("longitud")),
                         cursor.getInt(cursor.getColumnIndexOrThrow("user_id")),
-                        cursor.getInt(cursor.getColumnIndexOrThrow("vehicle_id")),
-                        cursor.getInt(cursor.getColumnIndexOrThrow("trip_id"))
+                        obtenerIntSeguro(cursor, "vehicle_id"),
+                        obtenerIntSeguro(cursor, "trip_id")
                 );
 
                 mapa.put(evento, id);
@@ -105,5 +105,15 @@ public class DeventoSync {
 
     private void marcarComoEnviado(int id) {
         db.execSQL("UPDATE eventos SET enviado = 1 WHERE id = ?", new Object[]{id});
+    }
+
+
+    private Integer obtenerIntSeguro(Cursor cursor, String columna) {
+        int index = cursor.getColumnIndexOrThrow(columna);
+        if (cursor.isNull(index)) {
+            return null;
+        }
+        int valor = cursor.getInt(index);
+        return valor == -1 ? null : valor;
     }
 }

@@ -1,11 +1,12 @@
 package com.grupo12.securitysystemmovil.presentacion;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
+import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,7 +17,6 @@ import androidx.core.app.ActivityCompat;
 import com.google.android.gms.location.Priority;
 import com.grupo12.securitysystemmovil.R;
 import com.grupo12.securitysystemmovil.dato.Evento.DeventoSync;
-import com.grupo12.securitysystemmovil.dato.Seguimiento.SeguimientoService;
 import com.grupo12.securitysystemmovil.negocio.Nvelocidad;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -47,15 +47,10 @@ public class Pvelocidad extends AppCompatActivity {
         nvelocidad.umbralVelocidad(this);
 
         tvAlertaVelocidad = findViewById(R.id.tvAlertaVelocidad);
-        nvelocidad.setTextViewAlerta(tvAlertaVelocidad); // se lo pasamos a la lógica
 
         locationClient = LocationServices.getFusedLocationProviderClient(this);
 
         solicitarPermisos();
-
-        Intent intent = new Intent(this, SeguimientoService.class);
-        stopService(intent);
-
     }
 
     private void solicitarPermisos() {
@@ -70,24 +65,34 @@ public class Pvelocidad extends AppCompatActivity {
 
     @SuppressWarnings("MissingPermission")
     private void iniciarMedicion() {
+        Log.d("Pvelocidad", "Iniciando medición de ubicación...");
         LocationRequest request = new LocationRequest.Builder(1000)
                 .setMinUpdateIntervalMillis(500)
                 .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                 .build();
 
-        locationClient.requestLocationUpdates(request, new LocationCallback() {
-            @Override
-            public void onLocationResult(@NonNull LocationResult locationResult) {
-                Location location = locationResult.getLastLocation();
-                if (location != null) {
-                    float velocidadKmh = location.getSpeed() * 3.6f;
-                    tvVelocidad.setText(String.format("Velocidad: %d km/h", Math.round(velocidadKmh)));
-
-                    nvelocidad.procesarVelocidad(location);
-                }
-            }
-        }, Looper.getMainLooper());
+        locationClient.requestLocationUpdates(request, locationCallback, Looper.getMainLooper());
     }
+
+    private LocationCallback locationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(@NonNull LocationResult locationResult) {
+            Location location = locationResult.getLastLocation();
+            if (location != null) {
+                float velocidadKmh = location.getSpeed() * 3.6f;
+                tvVelocidad.setText(String.format("Velocidad: %d km/h", Math.round(velocidadKmh)));
+
+                nvelocidad.procesarVelocidad(location);
+
+                if (velocidadKmh > nvelocidad.getUmbralVelocidad()) {
+                    tvAlertaVelocidad.setVisibility(View.VISIBLE);
+                } else {
+                    tvAlertaVelocidad.setVisibility(View.GONE);
+                }
+                Log.d("Pvelocidad", "Medición: Velocidad: " + Math.round(velocidadKmh) + " km/h");
+            }
+        }
+    };
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -101,6 +106,13 @@ public class Pvelocidad extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Permiso de ubicación requerido", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("Pvelocidad", "Deteniendo medición de ubicación...");
+        locationClient.removeLocationUpdates(locationCallback);
     }
 
 }

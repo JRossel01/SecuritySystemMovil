@@ -23,6 +23,18 @@
         android:theme="@style/Theme.SecuritySystemMovil"
         tools:targetApi="31">
         <activity
+            android:name=".presentacion.Pnavegacion"
+            android:exported="false" />
+        <activity
+            android:name=".presentacion.PcambioConductor"
+            android:exported="false" />
+        <activity
+            android:name=".presentacion.PfinViaje"
+            android:exported="false" />
+        <activity
+            android:name=".presentacion.PpreViaje"
+            android:exported="false" />
+        <activity
             android:name=".presentacion.Perror.PsinViaje"
             android:exported="false" />
         <activity
@@ -30,7 +42,7 @@
             android:exported="true" />
         <activity
             android:name=".presentacion.PshowVehiculo"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -64,7 +76,6 @@
         <service
             android:name=".dato.Seguimiento.SeguimientoService"
             android:exported="false" />
-
     </application>
 
 </manifest>

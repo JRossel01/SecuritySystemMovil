@@ -75,10 +75,14 @@ public class Dtrip {
 
     private void guardarDatosViaje(JsonObject trip) {
         int tripId = trip.get("id").getAsInt();
+        String fechaInicio = trip.get("fecha_inicio").getAsString();
+        String horaInicio = trip.get("hora_inicio").getAsString();
         int vehicleId = trip.get("vehicle_id").getAsInt();
 
         ContentValues valuesTrip = new ContentValues();
         valuesTrip.put("id", tripId);
+        valuesTrip.put("fecha_inicio", fechaInicio);
+        valuesTrip.put("hora_inicio", horaInicio);
         valuesTrip.put("vehicle_id", vehicleId);
         db.insert("viaje", null, valuesTrip);
     }
@@ -86,6 +90,7 @@ public class Dtrip {
     private void guardarDatosRuta(JsonObject route) {
         ContentValues valuesRuta = new ContentValues();
         valuesRuta.put("id", route.get("id").getAsInt());
+        valuesRuta.put("nombre", route.get("nombre").getAsString());
         valuesRuta.put("origen_lat", route.get("origen_lat").getAsString());
         valuesRuta.put("origen_lng", route.get("origen_lng").getAsString());
         valuesRuta.put("destino_lat", route.get("destino_lat").getAsString());

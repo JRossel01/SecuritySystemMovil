@@ -13,7 +13,6 @@ public class Nvelocidad {
 
     private boolean enExceso = false;
     private long tiempoInicioExceso = 0;
-    private TextView tvAlertaVelocidad;
     private double latitud = 0;
     private double longitud = 0;
     private float umbralVelocidad = -1f;
@@ -56,10 +55,6 @@ public class Nvelocidad {
                 Log.i("Velocidad", mensaje);
                 dvelocidad.crearEvento(mensaje, "Velocidad", "Advertencia", latitud, longitud);
                 dvelocidad.activarAlertaSonora();
-
-                if (tvAlertaVelocidad != null) {
-                    tvAlertaVelocidad.setVisibility(View.VISIBLE);
-                }
             }
         } else {
             if (enExceso) {
@@ -72,12 +67,8 @@ public class Nvelocidad {
 
                 String mensaje = String.format(Locale.getDefault(),"Conducción en exceso durante %d min %d seg", minutos, segundos);
                 Log.i("Velocidad", "Mensaje generado: " + mensaje);
-                dvelocidad.crearEvento(mensaje, "Velocidad", "Informacion", latitud, longitud);
+                dvelocidad.crearEvento(mensaje, "Velocidad", "Advertencia", latitud, longitud);
                 dvelocidad.detenerAlertaSonora();
-
-                if (tvAlertaVelocidad != null) {
-                    tvAlertaVelocidad.setVisibility(View.GONE);
-                }
             }
         }
     }
@@ -95,7 +86,7 @@ public class Nvelocidad {
                             Math.round(diferenciaVelocidad), deltaTiempo / 1000f);
 
                     Log.e("Velocidad", mensaje);
-                    dvelocidad.crearEvento(mensaje, "Colisión", "Critico", latitud, longitud);
+                    dvelocidad.crearEvento(mensaje, "Colision", "Critico", latitud, longitud);
                 } else {
                     // ⚠Freno brusco común
                     String mensaje = String.format(Locale.getDefault(),
@@ -117,16 +108,20 @@ public class Nvelocidad {
         this.umbralVelocidad = nvehiculo.obtenerVehiculoLocal().velocidadMaxima;
     }
 
-    public void setTextViewAlerta(TextView tvAlertaVelocidad) {
-        this.tvAlertaVelocidad = tvAlertaVelocidad;
-    }
-
     public void setUbicacion(double lat, double lon) {
         this.latitud = lat;
         this.longitud = lon;
     }
 
 
+    public float getUmbralVelocidad() {
+        return umbralVelocidad;
+    }
 
+    public boolean esFrenoBrusco(float vAnterior, float vActual, long tAnterior, long tActual) {
+        float diferencia = vAnterior - vActual;
+        long deltaTiempo = tActual - tAnterior;
+        return diferencia >= 15f && deltaTiempo <= 1500 && vActual < 1.0f;
+    }
 
 }

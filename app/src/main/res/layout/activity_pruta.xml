@@ -34,7 +34,20 @@
             android:textColor="#EEEEEE"
             android:textSize="16sp"
             android:text="Fin del Viaje en: 0 Km" />
+        <Button
+            android:id="@+id/btnFinViaje"
+            android:layout_width="280sp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="16dp"
+            android:text="Finalizar"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:backgroundTint="@color/rojo"
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 
 </FrameLayout>
+
 

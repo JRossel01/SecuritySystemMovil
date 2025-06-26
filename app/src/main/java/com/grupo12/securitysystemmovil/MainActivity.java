@@ -50,5 +50,25 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, com.grupo12.securitysystemmovil.presentacion.PloginFacial.class);
             startActivity(intent);
         });
+
+        findViewById(R.id.btnPreViaje).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, com.grupo12.securitysystemmovil.presentacion.PpreViaje.class);
+            startActivity(intent);
+        });
+
+        findViewById(R.id.btnFinViaje).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, com.grupo12.securitysystemmovil.presentacion.PfinViaje.class);
+            startActivity(intent);
+        });
+
+        findViewById(R.id.btnCambioConductor).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, com.grupo12.securitysystemmovil.presentacion.PcambioConductor.class);
+            startActivity(intent);
+        });
+
+        findViewById(R.id.btnNavegacion).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, com.grupo12.securitysystemmovil.presentacion.Pnavegacion.class);
+            startActivity(intent);
+        });
     }
 }

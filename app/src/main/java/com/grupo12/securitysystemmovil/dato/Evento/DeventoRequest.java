@@ -9,11 +9,11 @@ public class DeventoRequest {
     private double latitud;
     private double longitud;
     private int user_id;
-    private int vehicle_id;
-    private int trip_id;
+    private Integer vehicle_id;
+    private Integer trip_id;
 
     public DeventoRequest(String mensaje, String tipo, String nivel, String fecha, String hora,
-                         double latitud, double longitud, int user_id, int vehicle_id, int trip_id) {
+                         double latitud, double longitud, int user_id, Integer vehicle_id, Integer trip_id) {
         this.mensaje = mensaje;
         this.tipo = tipo;
         this.nivel = nivel;

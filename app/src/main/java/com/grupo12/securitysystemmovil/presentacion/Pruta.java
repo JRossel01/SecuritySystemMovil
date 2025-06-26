@@ -1,39 +1,32 @@
 package com.grupo12.securitysystemmovil.presentacion;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.Path;
-import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -44,7 +37,9 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.maps.android.SphericalUtil;
 
 
+import com.grupo12.securitysystemmovil.MainActivity;
 import com.grupo12.securitysystemmovil.R;
+import com.grupo12.securitysystemmovil.negocio.NcambioConductor;
 import com.grupo12.securitysystemmovil.negocio.Nruta;
 import com.grupo12.securitysystemmovil.utils.MapaIconos;
 
@@ -56,21 +51,23 @@ public class Pruta extends AppCompatActivity implements OnMapReadyCallback, Sens
     private Nruta nruta;
     private GoogleMap mapa;
     private Marker marcadorActual;
-    private FusedLocationProviderClient locationClient;
     private static final int REQUEST_LOCATION_PERMISSION = 1001;
-    private LocationCallback locationCallback;
-    private LocationRequest locationRequest;
     private SensorManager sensorManager;
     private float[] gravity;
     private float[] geomagnetic;
     private float azimuth;
-    private List<LatLng> puntosRecorridos = new ArrayList<>();
-    private Polyline lineaRecorrido;
     private TextView tvDistanciaParada;
     private TextView tvDistanciaDestino;
     private List<LatLng> paradasPendientes;
-    private List<LatLng> paradasAlcanzadas = new ArrayList<>();
-    private boolean salidaRegistrada = false;
+    private List<LatLng> recorridoRealizado = new ArrayList<>();
+    private Polyline polylineRecorrido;
+    private FusedLocationProviderClient locationClient;
+
+    private Button btnFinalizar;
+    private NcambioConductor ncambio;
+    private float distanciaDestino = 0;
+
+
     private static final double UMBRAL_PARADA_METROS = 50;
 
 
@@ -95,10 +92,40 @@ public class Pruta extends AppCompatActivity implements OnMapReadyCallback, Sens
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
+
         tvDistanciaParada = findViewById(R.id.tvDistanciaParada);
         tvDistanciaDestino = findViewById(R.id.tvDistanciaDestino);
 
+// Botón para finalizar
+        btnFinalizar = findViewById(R.id.btnFinViaje);
 
+        // Llama a tu función de verificar ubicaciones
+        nruta.verificarUbicacion(this, (posicion, distanciaParada, distanciaDestino) -> {
+            this.distanciaDestino = distanciaDestino;
+            // Si la distancia al destino es menor a 50 metros, muestra el botón "Finalizar"
+            if (distanciaDestino < 50) {
+                btnFinalizar.setVisibility(View.VISIBLE);
+            } else {
+                btnFinalizar.setVisibility(View.GONE);
+            }
+        });
+
+        btnFinalizar.setOnClickListener(v -> {
+            // Redirige al MainActivity o la actividad que necesites
+            if (distanciaDestino < 50) {
+                Intent intent = new Intent(Pruta.this, MainActivity.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(this, "Debes estar cerca del destino para finalizar el viaje.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    }
+
+    private Bitmap rotarIcono(Bitmap original, float angulo) {
+        android.graphics.Matrix matrix = new android.graphics.Matrix();
+        matrix.postRotate(angulo);
+        return Bitmap.createBitmap(original, 0, 0, original.getWidth(), original.getHeight(), matrix, true);
     }
 
     @Override
@@ -130,7 +157,6 @@ public class Pruta extends AppCompatActivity implements OnMapReadyCallback, Sens
         }
 
         ubicacionActual();
-        actualizarUbicacion();
 
         // Mostrar marcador de origen (inicio)
         LatLng origen = nruta.getOrigen();
@@ -153,16 +179,85 @@ public class Pruta extends AppCompatActivity implements OnMapReadyCallback, Sens
         LatLng destino = nruta.getDestino();
         mapa.addMarker(new MarkerOptions().position(destino).title("Destino"));
 
-        // Dibujar ruta con polyline (línea azul)
-        List<LatLng> rutaCompleta = nruta.getRutaCompleta();
-        PolylineOptions opcionesRuta = new PolylineOptions()
-                .addAll(rutaCompleta)
-                .color(Color.parseColor("#2962FF")) // celeste
-                .width(10f); // grosor de la línea
-        mapa.addPolyline(opcionesRuta);
+        // Dibujar ruta con Polyline (obtenida de Google Directions API o fallback)
+        nruta.getRutaGoogleAsync(ruta -> {
+            if (!ruta.isEmpty()) {
+                // Aquí agregas la polilínea de la ruta decodificada
+                PolylineOptions opcionesRuta = new PolylineOptions()
+                        .addAll(ruta)
+                        .color(Color.parseColor("#2962FF")) // Azul
+                        .width(10f);
+                mapa.addPolyline(opcionesRuta);
+            } else {
+                Log.e("Pruta", "No se pudo obtener la ruta optimizada. Mostrando ruta básica.");
+                List<LatLng> rutaFallback = nruta.getRutaCompleta();
+                // Aquí, también puedes agregar la ruta de fallback (si es necesario)
+                PolylineOptions opcionesFallback = new PolylineOptions()
+                        .addAll(rutaFallback)
+                        .color(Color.RED)
+                        .width(10f);
+                mapa.addPolyline(opcionesFallback);
+            }
+        });
 
         paradasPendientes = new ArrayList<>(nruta.getParadas());
 
+        nruta.verificarUbicacion(this, (posicion, distanciaParada, distanciaDestino) -> {
+
+
+            if (marcadorActual == null) {
+                Bitmap flecha = rotarIcono(MapaIconos.IconoUbicacionActual(), azimuth);
+                marcadorActual = mapa.addMarker(new MarkerOptions()
+                        .position(posicion)
+                        .title("Mi posición")
+                        .icon(BitmapDescriptorFactory.fromBitmap(flecha))
+                        .anchor(0.5f, 0.5f)
+                        .flat(true));
+
+
+                CameraPosition cameraPosition = new CameraPosition.Builder()
+                        .target(posicion)
+                        .zoom(18f)
+                        .bearing(azimuth)
+                        .tilt(45f)
+                        .build();
+                mapa.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+            } else {
+                marcadorActual.setPosition(posicion);
+            }
+
+            // Aquí se vuelve a usar el estilo Google Maps con inclinación y rotación
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(posicion)
+                    .zoom(18f)
+                    .bearing(azimuth)
+                    .tilt(45f)
+                    .build();
+            mapa.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+
+            // Dibuja línea gris del recorrido
+            recorridoRealizado.add(posicion);
+            if (polylineRecorrido != null) polylineRecorrido.remove();
+            polylineRecorrido = mapa.addPolyline(new PolylineOptions()
+                    .addAll(recorridoRealizado)
+                    .color(Color.GRAY)
+                    .width(8f));
+
+            // Actualiza los textos de distancia
+            String textoParada = (distanciaParada >= 1000) ?
+                    String.format("Distancia a parada: %.2f km", distanciaParada / 1000.0) :
+                    String.format("Distancia a parada: %.0f m", distanciaParada);
+
+            String textoDestino = (distanciaDestino >= 1000) ?
+                    String.format("Distancia a destino: %.2f km", distanciaDestino / 1000.0) :
+                    String.format("Distancia a destino: %.0f m", distanciaDestino);
+
+            tvDistanciaParada.setText(textoParada);
+            tvDistanciaDestino.setText(textoDestino);
+
+        });
     }
 
     @Override
@@ -179,8 +274,6 @@ public class Pruta extends AppCompatActivity implements OnMapReadyCallback, Sens
             if (mapFragment != null) {
                 mapFragment.getMapAsync(this);
             }
-
-            actualizarUbicacion();
         }
     }
 
@@ -191,136 +284,31 @@ public class Pruta extends AppCompatActivity implements OnMapReadyCallback, Sens
                     LatLng posicion = new LatLng(location.getLatitude(), location.getLongitude());
 
                     if (marcadorActual == null) {
+                        Bitmap flecha = rotarIcono(MapaIconos.IconoUbicacionActual(), azimuth);
                         marcadorActual = mapa.addMarker(new MarkerOptions()
                                 .position(posicion)
-                                .icon(MapaIconos.IconoUbicacionActual())
                                 .title("Mi posición")
+                                .icon(BitmapDescriptorFactory.fromBitmap(flecha)) // ✅ Agrega ícono también aquí
                                 .anchor(0.5f, 0.5f)
                                 .flat(true));
+
                     } else {
                         marcadorActual.setPosition(posicion);
                     }
 
-                    mapa.animateCamera(CameraUpdateFactory.newLatLngZoom(posicion, 18));
+                    CameraPosition cameraPosition = new CameraPosition.Builder()
+                            .target(posicion)
+                            .zoom(18f)
+                            .bearing(azimuth)
+                            .tilt(45f)
+                            .build();
+                    mapa.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
                 }
             });
         }
     }
 
-    private void actualizarUbicacion() {
-        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
-                .setMinUpdateIntervalMillis(500) // mínimo medio segundo
-                .build();
-
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) return;
-
-                for (Location location : locationResult.getLocations()) {
-                    LatLng posicion = new LatLng(location.getLatitude(), location.getLongitude());
-
-                    runOnUiThread(() -> {
-                        if (marcadorActual == null) {
-                            marcadorActual = mapa.addMarker(new MarkerOptions()
-                                    .position(posicion)
-                                    .icon(MapaIconos.IconoUbicacionActual())
-                                    .title("Mi posición"));
-                        } else {
-                            marcadorActual.setPosition(posicion);
-                            CameraPosition cameraPosition = new CameraPosition.Builder()
-                                    .target(posicion)         // posición actual
-                                    .zoom(18f)                // nivel de zoom (ajústalo si quieres más o menos cerca)
-                                    .bearing(azimuth)         // dirección hacia la que se mueve el vehículo
-                                    .tilt(45f)                // inclinación de la cámara para un efecto 3D
-                                    .build();
-
-                            mapa.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                        }
-
-                        puntosRecorridos.add(posicion);
-
-                        if (!salidaRegistrada) {
-                            double distanciaDesdeOrigen = SphericalUtil.computeDistanceBetween(posicion, nruta.getOrigen());
-                            if (distanciaDesdeOrigen > UMBRAL_PARADA_METROS) {
-                                salidaRegistrada = true;
-                                nruta.crearEventoSalida("origen", posicion.latitude, posicion.longitude, 0, true);
-                            }
-                        }
-
-                        // Detectar salida desde cada parada ya alcanzada
-                        for (LatLng parada : new ArrayList<>(paradasAlcanzadas)) {
-                            double distancia = SphericalUtil.computeDistanceBetween(posicion, parada);
-                            if (distancia > UMBRAL_PARADA_METROS) {
-                                int numeroParada = nruta.getNumeroParada(parada);
-                                nruta.crearEventoSalida("parada", posicion.latitude, posicion.longitude, numeroParada, false);
-                                paradasAlcanzadas.remove(parada);
-                            }
-                        }
-
-                        // Detectar llegada a paradas
-                        for (LatLng parada : new ArrayList<>(paradasPendientes)) {
-                            double distancia = SphericalUtil.computeDistanceBetween(posicion, parada);
-                            if (distancia < UMBRAL_PARADA_METROS) {
-                                paradasPendientes.remove(parada);
-                                paradasAlcanzadas.add(parada); // importante para detectar salida después
-                                int numeroParada = nruta.getNumeroParada(parada);
-                                nruta.crearEventoLlegada(null, posicion.latitude, posicion.longitude, numeroParada, false);
-                            }
-                        }
-
-                        for (LatLng parada : new ArrayList<>(paradasPendientes)) {
-                            double distancia = SphericalUtil.computeDistanceBetween(posicion, parada);
-                            if (distancia < UMBRAL_PARADA_METROS) {
-                                paradasPendientes.remove(parada);
-                                int numeroParada = nruta.getNumeroParada(parada);
-                                nruta.crearEventoLlegada(null, posicion.latitude, posicion.longitude, numeroParada, false);
-                            }
-                        }
-
-                        LatLng destino = nruta.getDestino();
-                        if (SphericalUtil.computeDistanceBetween(posicion, destino) < UMBRAL_PARADA_METROS && !nruta.isDestinoRegistrado()) {
-                            nruta.setDestinoRegistrado(true);
-                            nruta.crearEventoLlegada(null, posicion.latitude, posicion.longitude, 0, true);
-                        }
-
-                        if (lineaRecorrido != null) lineaRecorrido.remove();
-                        lineaRecorrido = mapa.addPolyline(new PolylineOptions()
-                                .addAll(puntosRecorridos)
-                                .color(Color.GRAY)
-                                .width(10f));
-
-                        destino = nruta.getDestino();
-                        double distanciaDestino = SphericalUtil.computeDistanceBetween(posicion, destino);
-
-                        LatLng proximaParada = obtenerProximaParada(posicion);
-                        double distanciaParada = SphericalUtil.computeDistanceBetween(posicion, proximaParada);
-
-                        String textoDestino;
-                        if (distanciaDestino >= 1000) {
-                            textoDestino = String.format("Hasta destino: %.2f km", distanciaDestino / 1000);
-                        } else {
-                            textoDestino = String.format("Hasta destino: %.0f m", distanciaDestino);
-                        }
-
-                        String textoParada;
-                        if (distanciaParada >= 1000) {
-                            textoParada = String.format("Hasta próxima parada: %.2f km", distanciaParada / 1000);
-                        } else {
-                            textoParada = String.format("Hasta próxima parada: %.0f m", distanciaParada);
-                        }
-
-                        tvDistanciaDestino.setText(textoDestino);
-                        tvDistanciaParada.setText(textoParada);
-                    });
-                }
-            }
-        };
-        // Iniciar actualizaciones solo si se tienen permisos de ubicación
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationClient.requestLocationUpdates(locationRequest, locationCallback, null);
-        }
-    }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -330,29 +318,25 @@ public class Pruta extends AppCompatActivity implements OnMapReadyCallback, Sens
             geomagnetic = event.values;
 
         if (gravity != null && geomagnetic != null) {
-            float R[] = new float[9];
-            float I[] = new float[9];
-
+            float[] R = new float[9];
+            float[] I = new float[9];
             boolean success = SensorManager.getRotationMatrix(R, I, gravity, geomagnetic);
+
             if (success) {
-                float orientation[] = new float[3];
+                float[] orientation = new float[3];
                 SensorManager.getOrientation(R, orientation);
                 azimuth = (float) Math.toDegrees(orientation[0]);
                 azimuth = (azimuth + 360) % 360;
 
                 if (marcadorActual != null) {
-                    // Suavizar la rotación
-                    float rotacionAnterior = marcadorActual.getRotation();
-                    float diferencia = azimuth - rotacionAnterior;
-                    if (Math.abs(diferencia) > 180) {
-                        if (diferencia > 0) diferencia -= 360;
-                        else diferencia += 360;
-                    }
-                    marcadorActual.setRotation(rotacionAnterior + diferencia * 0.1f); // Suaviza el giro
+                    marcadorActual.setRotation(azimuth);
                 }
             }
         }
     }
+
+
+
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -380,5 +364,15 @@ public class Pruta extends AppCompatActivity implements OnMapReadyCallback, Sens
             return nruta.getDestino();
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
+        nruta.detenerMonitoreo(); // Detiene las actualizaciones de ubicación
+    }
+
 
 }

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="32dp"
+    android:background="#FFF8E1">
+
+    <TextView
+        android:id="@+id/txtTitulo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Seleccione al nuevo conductor"
+        android:textSize="24sp"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="32dp"
+        android:layout_alignParentTop="true" />
+
+    <Spinner
+        android:id="@+id/spinnerConductores"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/txtTitulo"
+        android:layout_marginBottom="40dp"
+        android:spinnerMode="dropdown"
+        android:background="@android:drawable/btn_dropdown" />
+
+    <Button
+        android:id="@+id/btnCambiarConductor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cambiar conductor"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:backgroundTint="@color/verde"
+        android:textColor="#FFFFFF"
+        android:layout_below="@id/spinnerConductores"
+        android:layout_marginTop="20dp" />
+</RelativeLayout>

@@ -5,6 +5,8 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import android.Manifest;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,15 +16,18 @@ import androidx.core.content.ContextCompat;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
+import com.grupo12.securitysystemmovil.MainActivity;
 import com.grupo12.securitysystemmovil.R;
 import com.grupo12.securitysystemmovil.dato.Dvehiculo;
 import com.grupo12.securitysystemmovil.dato.Evento.DeventoSync;
 import com.grupo12.securitysystemmovil.dato.Seguimiento.SeguimientoService;
+import com.grupo12.securitysystemmovil.negocio.NbotonEmergencia;
 import com.grupo12.securitysystemmovil.negocio.Nvehiculo;
 
 public class PshowVehiculo extends AppCompatActivity {
 
-        private DeventoSync devSync;
+    //    Terminar Eventos al backend
+    private DeventoSync devSync;
 
     private TextView txtNombreVehiculo, txtPlacaVehiculo;
     private Nvehiculo nvehiculo;
@@ -43,8 +48,6 @@ public class PshowVehiculo extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pshow_vehiculo);
 
-        devSync = new DeventoSync(getApplicationContext());
-        devSync.iniciar();
 
         txtNombreVehiculo = findViewById(R.id.txtNombreVehiculo);
         txtPlacaVehiculo = findViewById(R.id.txtPlacaVehiculo);
@@ -52,8 +55,9 @@ public class PshowVehiculo extends AppCompatActivity {
 
         pedirPermisos();
 
-        Intent intent = new Intent(this, SeguimientoService.class);
-        startService(intent);
+        //    Terminar Eventos al backend
+        devSync = new DeventoSync(getApplicationContext());
+        devSync.detener();
 
         mostrarDatosVehiculo();
 
@@ -116,5 +120,19 @@ public class PshowVehiculo extends AppCompatActivity {
     public boolean onTouchEvent(MotionEvent event) {
         return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
     }
+
+
+//    BotonEmergencia
+//    @Override
+//    public boolean onKeyDown(int keyCode, KeyEvent event) {
+//        Log.d("BotonEmergencia", "Botón presionado - KeyCode: " + keyCode);
+//
+//        if (keyCode == 85) {
+//            new NbotonEmergencia(this).registrarEvento();
+//            return true; // ya manejado
+//        }
+//
+//        return super.onKeyDown(keyCode, event);
+//    }
 
 }
